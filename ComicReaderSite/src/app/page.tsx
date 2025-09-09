@@ -1,7 +1,20 @@
 "use client"; // needed for hooks
 import { useState, useMemo, useEffect } from "react";
 
-const MangaCard = ({ manga, featured = false }) => (
+interface Manga {
+  id?: string;
+  title: string;
+  cover?: string;
+  coverUrl?: string;
+  chapters: string[] | { number: string }[];
+}
+
+interface MangaCardProps {
+  manga: Manga;
+  featured?: boolean;
+}
+
+const MangaCard = ({ manga, featured = false }: MangaCardProps) => (
   <div
     className={`bg-gray-500 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow ${
       featured ? "h-64" : "h-56"
@@ -51,9 +64,9 @@ const MangaCard = ({ manga, featured = false }) => (
 
 
 export default function Home() {
-  const [featuredManga, setFeaturedManga] = useState([]);
+  const [featuredManga, setFeaturedManga] = useState<Manga[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Search/sort/pagination states
   const [search, setSearch] = useState("");
@@ -69,10 +82,10 @@ export default function Home() {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Failed to fetch manga data");
-        const data = await res.json();
+        const data: Manga[] = await res.json();
         setFeaturedManga(data);
       } catch (err) {
-        setError(err.message);
+        setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
       }
@@ -109,8 +122,8 @@ export default function Home() {
             Featured Manga
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {featuredManga.map((manga) => (
-              <MangaCard key={manga.id} manga={manga} featured />
+            {featuredManga.map((manga, index) => (
+              <MangaCard key={manga.id || index} manga={manga} featured />
             ))}
           </div>
         </section>
@@ -135,6 +148,7 @@ export default function Home() {
               value={sort}
               onChange={(e) => setSort(e.target.value)}
               className="px-3 py-2 border rounded-lg"
+              title="Sort manga"
             >
               <option value="az">Sort A → Z</option>
               <option value="za">Sort Z → A</option>
@@ -143,8 +157,8 @@ export default function Home() {
 
           {/* Manga Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-            {paginated.map((manga) => (
-              <MangaCard key={manga.id} manga={manga} />
+            {paginated.map((manga, index) => (
+              <MangaCard key={manga.id || index} manga={manga} />
             ))}
           </div>
 

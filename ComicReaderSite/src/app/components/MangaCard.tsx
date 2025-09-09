@@ -1,5 +1,17 @@
 // src/components/MangaCard.tsx
-export default function MangaCard({ manga, featured = false }) {
+interface Manga {
+  id?: string;
+  title: string;
+  cover: string;
+  chapters: string[];
+}
+
+interface MangaCardProps {
+  manga: Manga;
+  featured?: boolean;
+}
+
+export default function MangaCard({ manga, featured = false }: MangaCardProps) {
   return (
     <div className={`p-4 rounded-xl shadow-md ${featured ? "bg-purple-900" : "bg-gray-800"}`}>
       <img
