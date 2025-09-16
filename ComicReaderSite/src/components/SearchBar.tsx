@@ -47,20 +47,20 @@ export default function SearchBar() {
         placeholder="Search manga..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="px-3 py-2 border rounded-lg w-64"
+        className="search-bar"
       />
-
+      
       {searchTerm && (
-        <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
+        <div className="absolute top-full left-0 right-0 bg-black border border-black-300 rounded-lg mt-1 max-h-60 overflow-y-auto z-50">
           {isLoading ? (
-            <div className="p-4 text-gray-500">Loading...</div>
+            <div className="p-4 text-black">Loading...</div>
           ) : filteredManga.length > 0 ? (
             filteredManga.slice(0, 10).map((manga) => (
               <div
                 key={manga.id}
-                className="p-3 hover:bg-purple-100 cursor-pointer border-b last:border-b-0"
+                className="p-3 hover:bg-purple-300 cursor-pointer border-b last:border-b-0"
                 onClick={() => {
-                  // ✅ Navigate with client-side routing instead of full reload
+                  // Handle manga selection
                   window.location.href = `/manga/${manga.id}`;
                 }}
               >
@@ -68,7 +68,7 @@ export default function SearchBar() {
               </div>
             ))
           ) : (
-            <div className="p-4 text-gray-500">No manga found</div>
+            <div className="p-4 text-black-500">No manga found</div>
           )}
         </div>
       )}
