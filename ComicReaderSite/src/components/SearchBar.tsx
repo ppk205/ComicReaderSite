@@ -1,0 +1,77 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface Manga {
+  id: string;
+  title: string;
+  cover?: string;
+  chapters?: string[];
+}
+
+export default function SearchBar() {
+  const [mangaList, setMangaList] = useState<Manga[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ✅ Base URL from env with fallback
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080/Comic/api';
+
+  useEffect(() => {
+    const fetchMangaList = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/manga`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          setMangaList(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch manga list:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMangaList();
+  }, [API_BASE]);
+
+  const filteredManga = mangaList.filter((manga) =>
+    manga.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        placeholder="Search manga..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="px-3 py-2 border rounded-lg w-64"
+      />
+
+      {searchTerm && (
+        <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
+          {isLoading ? (
+            <div className="p-4 text-gray-500">Loading...</div>
+          ) : filteredManga.length > 0 ? (
+            filteredManga.slice(0, 10).map((manga) => (
+              <div
+                key={manga.id}
+                className="p-3 hover:bg-purple-100 cursor-pointer border-b last:border-b-0"
+                onClick={() => {
+                  // ✅ Navigate with client-side routing instead of full reload
+                  window.location.href = `/manga/${manga.id}`;
+                }}
+              >
+                {manga.title}
+              </div>
+            ))
+          ) : (
+            <div className="p-4 text-gray-500">No manga found</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
