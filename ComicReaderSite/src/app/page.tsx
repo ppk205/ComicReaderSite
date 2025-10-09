@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import MangaCard from "@/components/MangaCard";
 
 export default function Home() {
-  const [featuredManga, setFeaturedManga] = useState([]);
+  const [featuredManga, setFeaturedManga] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,11 +14,15 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const perPage = 12;
 
-  // ✅ Fetch manga from Spring Boot backend
+  // ✅ Base URL from env or fallback
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/Comic/api";
+
+  // ✅ Fetch manga from backend
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch("http://localhost:8080/api/manga", {
+        const res = await fetch(`${API_BASE}/manga`, {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Failed to fetch manga data");
@@ -31,7 +35,7 @@ export default function Home() {
       }
     }
     fetchData();
-  }, []);
+  }, [API_BASE]);
 
   const filtered = useMemo(() => {
     let data = [...featuredManga];
