@@ -13,6 +13,12 @@ export default function SearchBar() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
+<<<<<<< Updated upstream
+=======
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080/Comic/api';
+
+>>>>>>> Stashed changes
   useEffect(() => {
     const fetchMangaList = async () => {
       try {
@@ -44,7 +50,7 @@ export default function SearchBar() {
         onChange={(e) => setSearchTerm(e.target.value)}
         className="search-bar"
       />
-      
+
       {searchTerm && (
         <div className="absolute top-full left-0 right-0 bg-black border border-black-300 rounded-lg mt-1 max-h-60 overflow-y-auto z-50">
           {isLoading ? (

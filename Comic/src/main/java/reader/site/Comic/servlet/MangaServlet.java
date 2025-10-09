@@ -2,12 +2,7 @@ package reader.site.Comic.servlet;
 
 import java.io.IOException;
 import java.util.List;
-
 import com.google.gson.Gson;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,21 +10,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import reader.site.Comic.dao.MangaDAO;
 import reader.site.Comic.model.Manga;
-import org.bson.types.ObjectId;
+
 
 @WebServlet("/api/manga/*")
 public class MangaServlet extends HttpServlet {
-    private MongoClient client;
     private MangaDAO mangaDAO;
     private Gson gson = new Gson();
 
     @Override
     public void init() throws ServletException {
         try {
-            mangaDAO = new MangaDAO();   // ✅ use the no-arg constructor
-            System.out.println("MangaServlet initialized successfully");
+            mangaDAO = new MangaDAO();
+            System.out.println("MangaServlet initialized successfully (MySQL)");
         } catch (Exception e) {
-            System.err.println("Failed to initialize MangaServlet: " + e.getMessage());
             throw new ServletException("Database connection failed", e);
         }
     }
@@ -37,10 +30,7 @@ public class MangaServlet extends HttpServlet {
 
     @Override
     public void destroy() {
-        if (client != null) {
-            client.close();
-            System.out.println("MangaServlet destroyed, MongoDB connection closed");
-        }
+        System.out.println("MangaServlet destroyed (MySQL version)");
     }
 
     @Override
@@ -129,29 +119,32 @@ public class MangaServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        setCorsHeaders(response); // ✅ Add this so CORS headers are always sent
+        setCorsHeaders(response);
 
         String pathInfo = request.getPathInfo();
         System.out.println("GET request - PathInfo: " + pathInfo);
 
-        if (pathInfo == null || pathInfo.equals("/")) {
-            List<Manga> mangas = mangaDAO.findAll();
-            sendJsonResponse(response, mangas); // ✅ use helper (already sets CORS + content type)
-            return;
-        }
+        try {
+            if (pathInfo == null || pathInfo.equals("/")) {
+                List<Manga> mangas = mangaDAO.findAll();
+                sendJsonResponse(response, mangas);
+                return;
+            }
 
-        String id = pathInfo.substring(1);
-        if (ObjectId.isValid(id)) {
+            String id = pathInfo.substring(1); // e.g. /3 → "3"
             Manga manga = mangaDAO.findById(id);
+
             if (manga != null) {
                 sendJsonResponse(response, manga);
             } else {
                 sendErrorResponse(response, HttpServletResponse.SC_NOT_FOUND, "Manga not found");
             }
-        } else {
-            sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid ObjectId: " + id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error processing GET request");
         }
     }
+
 
 
     private void sendJsonResponse(HttpServletResponse resp, Object data) throws IOException {
