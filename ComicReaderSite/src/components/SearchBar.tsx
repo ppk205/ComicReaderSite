@@ -5,8 +5,7 @@ import { useState, useEffect } from 'react';
 interface Manga {
   id: string;
   title: string;
-  cover?: string;
-  chapters?: string[];
+  // Add other manga properties as needed
 }
 
 export default function SearchBar() {
@@ -14,29 +13,28 @@ export default function SearchBar() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ Base URL from env with fallback
   const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080/Comic/api';
+    process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080/Comic/api/manga';
 
   useEffect(() => {
     const fetchMangaList = async () => {
       try {
-        const res = await fetch(`${API_BASE}/manga`, { cache: 'no-store' });
+        const res = await fetch("http://localhost:8080/Comic/api/manga");
         if (res.ok) {
           const data = await res.json();
           setMangaList(data);
         }
       } catch (err) {
-        console.error('Failed to fetch manga list:', err);
+        console.error("Failed to fetch manga list:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchMangaList();
-  }, [API_BASE]);
+  }, []);
 
-  const filteredManga = mangaList.filter((manga) =>
+  const filteredManga = mangaList.filter(manga =>
     manga.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -49,7 +47,7 @@ export default function SearchBar() {
         onChange={(e) => setSearchTerm(e.target.value)}
         className="search-bar"
       />
-      
+
       {searchTerm && (
         <div className="absolute top-full left-0 right-0 bg-black border border-black-300 rounded-lg mt-1 max-h-60 overflow-y-auto z-50">
           {isLoading ? (

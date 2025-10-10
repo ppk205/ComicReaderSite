@@ -1,11 +1,11 @@
-"use client"; // needed for hooks
+"use client";
+
 import { useState, useMemo, useEffect } from "react";
 
 const MangaCard = ({ manga, featured = false }) => (
   <div
-    className={`bg-gray-500 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow ${
-      featured ? "h-64" : "h-56"
-    }`}
+    className={`bg-gray-500 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow ${featured ? "h-64" : "h-56"
+      }`}
   >
     <div className="flex h-full">
       <div className={`${featured ? "w-24" : "w-20"} flex-shrink-0`}>
@@ -21,9 +21,8 @@ const MangaCard = ({ manga, featured = false }) => (
       </div>
       <div className="flex-1 p-3 flex flex-col">
         <h3
-          className={`font-semibold text-white mb-2 ${
-            featured ? "text-lg" : "text-base"
-          } line-clamp-2`}
+          className={`font-semibold text-white mb-2 ${featured ? "text-lg" : "text-base"
+            } line-clamp-2`}
         >
           {manga.title}
         </h3>
@@ -51,9 +50,9 @@ const MangaCard = ({ manga, featured = false }) => (
 
 
 export default function Home() {
-  const [featuredManga, setFeaturedManga] = useState<any[]>([]);
+  const [featuredManga, setFeaturedManga] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Search/sort/pagination states
   const [search, setSearch] = useState("");
@@ -61,30 +60,25 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const perPage = 12;
 
-  // ✅ Base URL from env or fallback
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/Comic/api";
-
-  // ✅ Fetch manga from backend
+  // ✅ Fetch manga from Spring Boot backend
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(`${API_BASE}/manga`, {
+        const res = await fetch("http://localhost:8080/Comic/api/manga", {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Failed to fetch manga data");
         const data = await res.json();
         setFeaturedManga(data);
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, [API_BASE]);
+  }, []);
 
-  // ✅ filter + sort
   const filtered = useMemo(() => {
     let data = [...featuredManga];
     if (search) {
@@ -113,9 +107,10 @@ export default function Home() {
             Featured Manga
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {featuredManga.map((manga) => (
+            {featuredManga.slice(0, 5).map((manga) => (
               <MangaCard key={manga.id} manga={manga} featured />
             ))}
+
           </div>
         </section>
 
