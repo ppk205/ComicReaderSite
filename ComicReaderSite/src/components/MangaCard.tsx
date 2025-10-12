@@ -61,8 +61,4 @@ export default function MangaCard({
             </div>
         </div>
     );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 0513a7d4e42677d6ab370642dedce9ec0dd33125

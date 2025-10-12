@@ -16,7 +16,7 @@ export default function Home() {
 
   // ✅ Base URL from env or fallback
   const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/Comic/api";
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/api";
 
   // ✅ Fetch manga from backend
   useEffect(() => {
@@ -87,7 +87,11 @@ export default function Home() {
               }}
               className="px-3 py-2 border rounded-lg w-full md:w-1/3"
             />
+            <label htmlFor="sort-select" className="sr-only">
+              Sort manga
+            </label>
             <select
+              id="sort-select"
               value={sort}
               onChange={(e) => setSort(e.target.value)}
               className="px-3 py-2 border rounded-lg"
