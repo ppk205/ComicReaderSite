@@ -13,10 +13,20 @@ export default function SearchBar() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
+<<<<<<< HEAD
   useEffect(() => {
     const fetchMangaList = async () => {
       try {
         const res = await fetch("http://localhost:8080/api/manga");
+=======
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080/Comic/api/manga';
+
+  useEffect(() => {
+    const fetchMangaList = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/Comic/api/manga");
+>>>>>>> 8056ef92f9ca6650cbc5711d7c4ba2540a5acd06
         if (res.ok) {
           const data = await res.json();
           setMangaList(data);
@@ -31,7 +41,7 @@ export default function SearchBar() {
     fetchMangaList();
   }, []);
 
-  const filteredManga = mangaList.filter((manga) =>
+  const filteredManga = mangaList.filter(manga =>
     manga.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -44,7 +54,7 @@ export default function SearchBar() {
         onChange={(e) => setSearchTerm(e.target.value)}
         className="search-bar"
       />
-      
+
       {searchTerm && (
         <div className="absolute top-full left-0 right-0 bg-black border border-black-300 rounded-lg mt-1 max-h-60 overflow-y-auto z-50">
           {isLoading ? (
