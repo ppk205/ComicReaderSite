@@ -63,7 +63,7 @@ export default function RootLayout({
                 <SearchBar />
               </div>
               <nav className="flex gap-6 items-center">
-                <a href="/Login" className="text-1xl font-bold text-gray-900 hover:text-purple-600">
+                <a href="/login" className="text-1xl font-bold text-gray-900 hover:text-purple-600">
                   Login
                 </a>
               </nav>

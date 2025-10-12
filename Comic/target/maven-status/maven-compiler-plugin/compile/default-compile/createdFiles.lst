@@ -1,5 +1,11 @@
-reader\site\Comic\servlet\MangaServlet.class
-reader\site\Comic\servlet\TestServlet.class
+auth\api\LogoutServlet.class
+auth\api\UserServlet.class
 reader\site\Comic\dao\MangaDAO.class
+auth\data\UserDB.class
+reader\site\Comic\servlet\MangaServlet.class
+auth\filter\CORSFilter.class
+auth\api\LoginServlet.class
+auth\data\DBUtil.class
 reader\site\Comic\model\Manga.class
 reader\site\Comic\servlet\MangaServlet$ErrorResponse.class
+auth\business\User.class

@@ -1,4 +1,10 @@
-D:\sourcecode\Java\web\final\reader-page\Comic\src\main\java\reader\site\Comic\servlet\MangaServlet.java
-D:\sourcecode\Java\web\final\reader-page\Comic\src\main\java\reader\site\Comic\model\Manga.java
-D:\sourcecode\Java\web\final\reader-page\Comic\src\main\java\reader\site\Comic\servlet\TestServlet.java
-D:\sourcecode\Java\web\final\reader-page\Comic\src\main\java\reader\site\Comic\dao\MangaDAO.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone3\ComicReaderSite\Comic\src\main\java\auth\api\LogoutServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone3\ComicReaderSite\Comic\src\main\java\auth\data\DBUtil.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone3\ComicReaderSite\Comic\src\main\java\auth\data\UserDB.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone3\ComicReaderSite\Comic\src\main\java\reader\site\Comic\dao\MangaDAO.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone3\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\Manga.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone3\ComicReaderSite\Comic\src\main\java\auth\business\User.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone3\ComicReaderSite\Comic\src\main\java\auth\filter\CORSFilter.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone3\ComicReaderSite\Comic\src\main\java\auth\api\UserServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone3\ComicReaderSite\Comic\src\main\java\auth\api\LoginServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone3\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\MangaServlet.java
