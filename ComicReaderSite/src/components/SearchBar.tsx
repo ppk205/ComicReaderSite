@@ -13,20 +13,10 @@ export default function SearchBar() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-<<<<<<< HEAD
   useEffect(() => {
     const fetchMangaList = async () => {
       try {
         const res = await fetch("http://localhost:8080/api/manga");
-=======
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080/Comic/api/manga';
-
-  useEffect(() => {
-    const fetchMangaList = async () => {
-      try {
-        const res = await fetch("http://localhost:8080/Comic/api/manga");
->>>>>>> 8056ef92f9ca6650cbc5711d7c4ba2540a5acd06
         if (res.ok) {
           const data = await res.json();
           setMangaList(data);
