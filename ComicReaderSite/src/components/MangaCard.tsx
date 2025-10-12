@@ -1,8 +1,10 @@
 interface Manga {
-    coverUrl?: string;
-    cover?: string;
+    id?: string;
     title: string;
-    chapters?: (string | { number: number })[];
+    cover?: string;
+    coverUrl?: string;
+    picture?: string;
+    chapters?: string[];
 }
 
 export default function MangaCard({
@@ -12,15 +14,17 @@ export default function MangaCard({
     manga: Manga;
     featured?: boolean;
 }) {
+    const imageSrc = manga.picture || manga.coverUrl || manga.cover || "";
+
     return (
         <div
-            className={`bg-gray-500 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow ${featured ? "h-64" : "h-56"
+            className={`bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 ${featured ? "h-64" : "h-56"
                 }`}
         >
             <div className="flex h-full">
                 <div className={`${featured ? "w-24" : "w-20"} flex-shrink-0`}>
                     <img
-                        src={manga.coverUrl || manga.cover}
+                        src={imageSrc}
                         alt={manga.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -29,29 +33,29 @@ export default function MangaCard({
                         }}
                     />
                 </div>
-                <div className="flex-1 p-3 flex flex-col">
+
+                <div className="flex-1 p-3 flex flex-col justify-between">
                     <h3
                         className={`font-semibold text-white mb-2 ${featured ? "text-lg" : "text-base"
                             } line-clamp-2`}
                     >
                         {manga.title}
                     </h3>
-                    <div className="flex-1">
-                        <p className="text-sm text-white mb-1">Recent Chapters:</p>
+
+                    <div>
+                        <p className="text-sm text-gray-300 mb-1">Recent Chapters:</p>
                         <div className="space-y-1">
                             {manga.chapters && manga.chapters.length > 0 ? (
-                                manga.chapters.slice(0, 3).map((chapter, index) => (
+                                manga.chapters.slice(0, 3).map((chapter, i) => (
                                     <div
-                                        key={index}
-                                        className="text-sm text-purple-300 hover:text-blue-800 cursor-pointer truncate"
+                                        key={i}
+                                        className="text-sm text-purple-300 hover:text-purple-500 cursor-pointer truncate"
                                     >
-                                        {typeof chapter === "string"
-                                            ? chapter
-                                            : `Chapter ${chapter.number}`}
+                                        {chapter}
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-sm text-gray-400">
+                                <div className="text-sm text-gray-500">
                                     No chapters available
                                 </div>
                             )}

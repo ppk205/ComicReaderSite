@@ -1,85 +1,136 @@
 package reader.site.Comic.dao;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
-import org.bson.types.ObjectId;
 import reader.site.Comic.model.Manga;
+import com.google.gson.Gson;
 
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Connection;
+import java.sql.DriverManager;
 
 public class MangaDAO {
-    private static final String CONNECTION_STRING =
-            "mongodb+srv://23162037_db_user:PbL4JP0UUV7tygFp@comic.ytiwgxu.mongodb.net/Comic?retryWrites=true&w=majority&appName=Comic"; //=))) đừng có public repo giúp t
+    private static final String JDBC_URL =
+            "jdbc:mysql://websql1.mysql.database.azure.com:3306/ComicDB?useSSL=true&requireSSL=true&serverTimezone=UTC";
+    private static final String JDBC_USER = "ppk123";
+    private static final String JDBC_PASSWORD = "Mysql@1234";
 
-    private static final String DATABASE_NAME = "Comic";
-    private static final String COLLECTION_NAME = "manga";
 
-    private final MongoClient mongoClient;
-    private final MongoDatabase database;
-    private final MongoCollection<Document> collection;
+    private static final Gson gson = new Gson();
 
     public MangaDAO() {
-        // connect to MongoDB Atlas
-        mongoClient = MongoClients.create(CONNECTION_STRING);
-        database = mongoClient.getDatabase(DATABASE_NAME);
-        collection = database.getCollection(COLLECTION_NAME);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("MySQL JDBC Driver not found", e);
+        }
+    }
+
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
     }
 
     // CREATE
     public Manga insert(Manga manga) {
-        Document doc = new Document("_id", new ObjectId())
-                .append("title", manga.getTitle())
-                .append("cover", manga.getCover())
-                .append("chapters", manga.getChapters());
+        String sql = "INSERT INTO manga (title, cover, chapters) VALUES (?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-        collection.insertOne(doc);
+            stmt.setString(1, manga.getTitle());
+            stmt.setString(2, manga.getCover());
+            stmt.setString(3, gson.toJson(manga.getChapters()));
 
-        manga.setId(doc.getObjectId("_id").toHexString());
-        return manga;
+            stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    manga.setId(String.valueOf(rs.getInt(1)));
+                }
+            }
+            return manga;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error inserting manga", e);
+        }
     }
 
     // READ ALL
     public List<Manga> findAll() {
         List<Manga> mangas = new ArrayList<>();
-        for (Document doc : collection.find()) {
-            mangas.add(fromDocument(doc));
+        String sql = "SELECT * FROM manga";
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                mangas.add(fromResultSet(rs));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching all mangas", e);
         }
         return mangas;
     }
 
     // READ ONE
     public Manga findById(String id) {
-        Document doc = collection.find(new Document("_id", new ObjectId(id))).first();
-        return doc != null ? fromDocument(doc) : null;
+        String sql = "SELECT * FROM manga WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, Integer.parseInt(id));
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return fromResultSet(rs);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching manga by ID", e);
+        }
+        return null;
     }
 
     // UPDATE
     public boolean update(String id, Manga manga) {
-        Document filter = new Document("_id", new ObjectId(id));
-        Document update = new Document("$set",
-                new Document("title", manga.getTitle())
-                        .append("cover", manga.getCover())
-                        .append("chapters", manga.getChapters()));
+        String sql = "UPDATE manga SET title = ?, cover = ?, chapters = ? WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-        return collection.updateOne(filter, update).getModifiedCount() > 0;
+            stmt.setString(1, manga.getTitle());
+            stmt.setString(2, manga.getCover());
+            stmt.setString(3, gson.toJson(manga.getChapters()));
+            stmt.setInt(4, Integer.parseInt(id));
+
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating manga", e);
+        }
     }
 
     // DELETE
     public boolean delete(String id) {
-        return collection.deleteOne(new Document("_id", new ObjectId(id))).getDeletedCount() > 0;
+        String sql = "DELETE FROM manga WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, Integer.parseInt(id));
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error deleting manga", e);
+        }
     }
 
-    // Helper: convert Mongo Document -> Manga object
-    private Manga fromDocument(Document doc) {
+    // Helper: convert SQL result -> Manga object
+    private Manga fromResultSet(ResultSet rs) throws SQLException {
         Manga manga = new Manga();
-        manga.setId(doc.getObjectId("_id").toHexString());
-        manga.setTitle(doc.getString("title"));
-        manga.setCover(doc.getString("cover"));
-        manga.setChapters((List<String>) doc.get("chapters"));
+        manga.setId(String.valueOf(rs.getInt("id")));
+        manga.setTitle(rs.getString("title"));
+        manga.setCover(rs.getString("cover"));
+
+        String chaptersJson = rs.getString("chapters");
+        List<String> chapters = gson.fromJson(chaptersJson, List.class);
+        manga.setChapters(chapters);
+
         return manga;
     }
 }
