@@ -1,129 +1,98 @@
-"use client";
-import { useState } from "react";
+'use client';
 
-export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState("");
-  const [loading, setLoading] = useState(false);
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../contexts/AuthContext';
 
-  async function onSubmit(e: React.FormEvent) {
+export default function Login() {
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setMsg("");
+    setIsLoading(true);
+    setError('');
+
     try {
-      const res = await fetch("http://localhost:8080/Comic/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username, password })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setMsg(data?.message || "Đăng nhập thất bại");
-        return;
-      }
-      setMsg("✅ Đăng nhập thành công!");
-      // window.location.href = "/dashboard";
-    } catch {
-      setMsg("❌ Không kết nối được máy chủ");
+      await login(credentials);
+      router.push('/dashboard');
+    } catch (err) {
+      setError('Invalid username or password');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <div style={{
-      height: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "#0d1117",
-      color: "#e6edf3",
-      fontFamily: "Inter, sans-serif"
-    }}>
-      <form
-        onSubmit={onSubmit}
-        style={{
-          width: 360,
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-          backgroundColor: "#161b22",
-          padding: "32px 28px",
-          borderRadius: 12,
-          boxShadow: "0 0 10px rgba(0,0,0,0.4)"
-        }}
-      >
-        <h1 style={{ textAlign: "center", marginBottom: 10 }}>Đăng nhập</h1>
-
-        <label>
-          <span style={{ display: "block", marginBottom: 6 }}>Tên đăng nhập</span>
-          <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            placeholder="Nhập username"
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: 8,
-              border: "1px solid #30363d",
-              backgroundColor: "#0d1117",
-              color: "#e6edf3",
-            }}
-          />
-        </label>
-
-        <label>
-          <span style={{ display: "block", marginBottom: 6 }}>Mật khẩu</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            placeholder="Nhập password"
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: 8,
-              border: "1px solid #30363d",
-              backgroundColor: "#0d1117",
-              color: "#e6edf3",
-            }}
-          />
-        </label>
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            marginTop: 10,
-            backgroundColor: "#238636",
-            color: "#fff",
-            border: "none",
-            padding: "10px 12px",
-            borderRadius: 8,
-            cursor: "pointer",
-            fontWeight: 600,
-            transition: "0.2s",
-          }}
-          onMouseOver={(e) => ((e.target as HTMLButtonElement).style.backgroundColor = "#2ea043")}
-          onMouseOut={(e) => ((e.target as HTMLButtonElement).style.backgroundColor = "#238636")}
-        >
-          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-        </button>
-
-        {msg && (
-          <p style={{
-            textAlign: "center",
-            color: msg.includes("✅") ? "#2ea043" : "#f85149",
-            marginTop: 8
-          }}>
-            {msg}
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Comic Reader Admin
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Sign in to your admin account
           </p>
-        )}
-      </form>
+        </div>
+        <form className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+          
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              Username
+            </label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              required
+              className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Enter your username"
+              value={credentials.username}
+              onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Enter your password"
+              value={credentials.password}
+              onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+
+          <div className="text-sm text-gray-600">
+            <p>Demo accounts:</p>
+            <p>Admin: admin/admin123</p>
+            <p>Moderator: mod/mod123</p>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
