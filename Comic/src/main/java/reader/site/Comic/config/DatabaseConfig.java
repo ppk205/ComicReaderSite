@@ -5,11 +5,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConfig {
-    // Correct database configuration - using port 13658
+    // Azure MySQL database configuration
     private static final String JDBC_URL =
-            "jdbc:mysql://web-welpweb.l.aivencloud.com:26170/defaultdb?useSSL=true&requireSSL=true&serverTimezone=UTC";
-    private static final String JDBC_USER = "avnadmin";
-    private static final String JDBC_PASSWORD = "AVNS_WRR4qdO4pISviLaP54c";
+            "jdbc:mysql://websql1.mysql.database.azure.com:3306/comicdb?useSSL=true&requireSSL=true&serverTimezone=UTC";
+    private static final String JDBC_USER = "ppk123";
+    private static final String JDBC_PASSWORD = "Mysql@1234";
 
     static {
         try {

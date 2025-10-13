@@ -1,21 +1,13 @@
 package reader.site.Comic.dao;
 
+import reader.site.Comic.config.DatabaseConfig;
 import reader.site.Comic.model.User;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class UserDAO {
-    private static final String JDBC_URL =
-            "jdbc:mysql://web-welpweb.l.aivencloud.com:26170/defaultdb?useSSL=true&requireSSL=true&serverTimezone=UTC";
-    private static final String JDBC_USER = "avnadmin";
-    private static final String JDBC_PASSWORD = "AVNS_WRR4qdO4pISviLaP54c";
-
-    private static final Gson gson = new Gson();
 
     public UserDAO() {
         try {
@@ -26,33 +18,20 @@ public class UserDAO {
     }
 
     private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
+        return DatabaseConfig.getConnection();
     }
 
     // CREATE
     public User insert(User user) {
-        String sql = "INSERT INTO users (username, email, password, avatar_url, role, series_count, followers_count, " +
-                     "bio, preferences, display_name, birth_date, viewer_count, manga_likes, author_likes, social_links, quick_note) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (username, email, password, status, role_id) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getEmail());
             stmt.setString(3, user.getPassword());
-            stmt.setString(4, user.getAvatarUrl());
-            stmt.setString(5, user.getRole());
-            stmt.setInt(6, user.getSeriesCount());
-            stmt.setInt(7, user.getFollowersCount());
-            stmt.setString(8, user.getBio());
-            stmt.setString(9, user.getPreferences());
-            stmt.setString(10, user.getDisplayName());
-            stmt.setString(11, user.getBirthDate());
-            stmt.setInt(12, user.getViewerCount());
-            stmt.setString(13, user.getMangaLikes() != null ? gson.toJson(user.getMangaLikes()) : null);
-            stmt.setString(14, user.getAuthorLikes() != null ? gson.toJson(user.getAuthorLikes()) : null);
-            stmt.setString(15, user.getSocialLinks() != null ? gson.toJson(user.getSocialLinks()) : null);
-            stmt.setString(16, user.getQuickNote() != null ? gson.toJson(user.getQuickNote()) : null);
+            stmt.setString(4, user.getStatus() != null ? user.getStatus() : "active");
+            stmt.setString(5, user.getRoleId() != null ? user.getRoleId() : "1");
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
@@ -61,12 +40,12 @@ public class UserDAO {
 
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
-                    user.setId(String.valueOf(generatedKeys.getInt(1)));
+                    user.setId(String.valueOf(generatedKeys.getLong(1)));
                 }
             }
             return user;
         } catch (SQLException e) {
-            throw new RuntimeException("Error inserting user", e);
+            throw new RuntimeException("Error inserting user: " + e.getMessage(), e);
         }
     }
 
@@ -76,7 +55,7 @@ public class UserDAO {
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, Integer.parseInt(id));
+            stmt.setLong(1, Long.parseLong(id));
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
@@ -84,7 +63,7 @@ public class UserDAO {
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding user by ID", e);
+            throw new RuntimeException("Error finding user by ID: " + e.getMessage(), e);
         }
     }
 
@@ -102,7 +81,7 @@ public class UserDAO {
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding user by username", e);
+            throw new RuntimeException("Error finding user by username: " + e.getMessage(), e);
         }
     }
 
@@ -120,7 +99,7 @@ public class UserDAO {
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding user by email", e);
+            throw new RuntimeException("Error finding user by email: " + e.getMessage(), e);
         }
     }
 
@@ -137,17 +116,14 @@ public class UserDAO {
                 users.add(mapResultSetToUser(rs));
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding all users", e);
+            throw new RuntimeException("Error finding all users: " + e.getMessage(), e);
         }
         return users;
     }
 
     // UPDATE
     public User update(User user) {
-        String sql = "UPDATE users SET username = ?, email = ?, password = ?, avatar_url = ?, role = ?, " +
-                     "series_count = ?, followers_count = ?, bio = ?, preferences = ?, display_name = ?, " +
-                     "birth_date = ?, viewer_count = ?, manga_likes = ?, author_likes = ?, social_links = ?, " +
-                     "quick_note = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        String sql = "UPDATE users SET username = ?, email = ?, password = ?, status = ?, role_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -155,20 +131,9 @@ public class UserDAO {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getEmail());
             stmt.setString(3, user.getPassword());
-            stmt.setString(4, user.getAvatarUrl());
-            stmt.setString(5, user.getRole());
-            stmt.setInt(6, user.getSeriesCount());
-            stmt.setInt(7, user.getFollowersCount());
-            stmt.setString(8, user.getBio());
-            stmt.setString(9, user.getPreferences());
-            stmt.setString(10, user.getDisplayName());
-            stmt.setString(11, user.getBirthDate());
-            stmt.setInt(12, user.getViewerCount());
-            stmt.setString(13, user.getMangaLikes() != null ? gson.toJson(user.getMangaLikes()) : null);
-            stmt.setString(14, user.getAuthorLikes() != null ? gson.toJson(user.getAuthorLikes()) : null);
-            stmt.setString(15, user.getSocialLinks() != null ? gson.toJson(user.getSocialLinks()) : null);
-            stmt.setString(16, user.getQuickNote() != null ? gson.toJson(user.getQuickNote()) : null);
-            stmt.setInt(17, Integer.parseInt(user.getId()));
+            stmt.setString(4, user.getStatus());
+            stmt.setString(5, user.getRoleId());
+            stmt.setLong(6, Long.parseLong(user.getId()));
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows == 0) {
@@ -176,7 +141,42 @@ public class UserDAO {
             }
             return user;
         } catch (SQLException e) {
-            throw new RuntimeException("Error updating user", e);
+            throw new RuntimeException("Error updating user: " + e.getMessage(), e);
+        }
+    }
+
+    // UPDATE profile fields (without password)
+    public User updateProfile(User user) {
+        String sql = "UPDATE users SET username = ?, email = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getEmail());
+            stmt.setString(3, user.getStatus());
+            stmt.setLong(4, Long.parseLong(user.getId()));
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Updating user profile failed, no rows affected.");
+            }
+            return user;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating user profile: " + e.getMessage(), e);
+        }
+    }
+
+    // UPDATE last login
+    public void updateLastLogin(String userId) {
+        String sql = "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, Long.parseLong(userId));
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating last login: " + e.getMessage(), e);
         }
     }
 
@@ -186,17 +186,17 @@ public class UserDAO {
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, Integer.parseInt(id));
+            stmt.setLong(1, Long.parseLong(id));
             int affectedRows = stmt.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Error deleting user", e);
+            throw new RuntimeException("Error deleting user: " + e.getMessage(), e);
         }
     }
 
     // LOGIN - validate user credentials
     public User authenticate(String username, String password) {
-        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+        String sql = "SELECT * FROM users WHERE username = ? AND password = ? AND status = 'active'";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -205,30 +205,53 @@ public class UserDAO {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                return mapResultSetToUser(rs);
+                User user = mapResultSetToUser(rs);
+                // Update last login
+                updateLastLogin(user.getId());
+                return user;
             }
             return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Error authenticating user", e);
+            throw new RuntimeException("Error authenticating user: " + e.getMessage(), e);
         }
     }
 
     // Get users by role
-    public List<User> findByRole(String role) {
-        String sql = "SELECT * FROM users WHERE role = ? ORDER BY created_at DESC";
+    public List<User> findByRole(String roleId) {
+        String sql = "SELECT * FROM users WHERE role_id = ? ORDER BY created_at DESC";
         List<User> users = new ArrayList<>();
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, role);
+            stmt.setString(1, roleId);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
                 users.add(mapResultSetToUser(rs));
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding users by role", e);
+            throw new RuntimeException("Error finding users by role: " + e.getMessage(), e);
+        }
+        return users;
+    }
+
+    // Get users by status
+    public List<User> findByStatus(String status) {
+        String sql = "SELECT * FROM users WHERE status = ? ORDER BY created_at DESC";
+        List<User> users = new ArrayList<>();
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, status);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding users by status: " + e.getMessage(), e);
         }
         return users;
     }
@@ -236,41 +259,15 @@ public class UserDAO {
     // Helper method to map ResultSet to User object
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         User user = new User();
-        user.setId(String.valueOf(rs.getInt("id")));
+        user.setId(String.valueOf(rs.getLong("id")));
         user.setUsername(rs.getString("username"));
         user.setEmail(rs.getString("email"));
         user.setPassword(rs.getString("password"));
-        user.setAvatarUrl(rs.getString("avatar_url"));
-        user.setRole(rs.getString("role"));
-        user.setSeriesCount(rs.getInt("series_count"));
-        user.setFollowersCount(rs.getInt("followers_count"));
-        user.setBio(rs.getString("bio"));
-        user.setPreferences(rs.getString("preferences"));
-        user.setDisplayName(rs.getString("display_name"));
-        user.setBirthDate(rs.getString("birth_date"));
-        user.setViewerCount(rs.getInt("viewer_count"));
-
-        // Parse JSON fields
-        String mangaLikesJson = rs.getString("manga_likes");
-        if (mangaLikesJson != null) {
-            user.setMangaLikes(gson.fromJson(mangaLikesJson, new TypeToken<List<String>>(){}.getType()));
-        }
-
-        String authorLikesJson = rs.getString("author_likes");
-        if (authorLikesJson != null) {
-            user.setAuthorLikes(gson.fromJson(authorLikesJson, new TypeToken<List<String>>(){}.getType()));
-        }
-
-        String socialLinksJson = rs.getString("social_links");
-        if (socialLinksJson != null) {
-            user.setSocialLinks(gson.fromJson(socialLinksJson, new TypeToken<Map<String, String>>(){}.getType()));
-        }
-
-        String quickNoteJson = rs.getString("quick_note");
-        if (quickNoteJson != null) {
-            user.setQuickNote(gson.fromJson(quickNoteJson, new TypeToken<Map<String, Object>>(){}.getType()));
-        }
-
+        user.setStatus(rs.getString("status"));
+        user.setCreatedAt(rs.getTimestamp("created_at"));
+        user.setUpdatedAt(rs.getTimestamp("updated_at"));
+        user.setLastLogin(rs.getTimestamp("last_login"));
+        user.setRoleId(rs.getString("role_id"));
         return user;
     }
 }

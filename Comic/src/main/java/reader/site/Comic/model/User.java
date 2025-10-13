@@ -1,29 +1,28 @@
 package reader.site.Comic.model;
 
-import java.util.List;
-import java.util.Map;
+import java.sql.Timestamp;
 
 public class User {
     private String id;
     private String username;
     private String email;
     private String password;
-    private String avatarUrl;
-    private String role;
-    private int seriesCount;
-    private int followersCount;
-    private String bio;
-    private String preferences;
-    private String displayName;
-    private String birthDate;
-    private int viewerCount;
-    private List<String> mangaLikes;
-    private List<String> authorLikes;
-    private Map<String, String> socialLinks;
-    private Map<String, Object> quickNote;
+    private String status;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+    private Timestamp lastLogin;
+    private String roleId;
 
     // Default constructor
     public User() {
+    }
+
+    // Constructor with essential fields
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.status = "active";
     }
 
     // Getters and Setters
@@ -59,107 +58,57 @@ public class User {
         this.password = password;
     }
 
-    public String getAvatarUrl() {
-        return avatarUrl;
+    public String getStatus() {
+        return status;
     }
 
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    public String getRole() {
-        return role;
+    public Timestamp getCreatedAt() {
+        return createdAt;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public int getSeriesCount() {
-        return seriesCount;
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setSeriesCount(int seriesCount) {
-        this.seriesCount = seriesCount;
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
-    public int getFollowersCount() {
-        return followersCount;
+    public Timestamp getLastLogin() {
+        return lastLogin;
     }
 
-    public void setFollowersCount(int followersCount) {
-        this.followersCount = followersCount;
+    public void setLastLogin(Timestamp lastLogin) {
+        this.lastLogin = lastLogin;
     }
 
-    public String getBio() {
-        return bio;
+    public String getRoleId() {
+        return roleId;
     }
 
-    public void setBio(String bio) {
-        this.bio = bio;
+    public void setRoleId(String roleId) {
+        this.roleId = roleId;
     }
 
-    public String getPreferences() {
-        return preferences;
-    }
-
-    public void setPreferences(String preferences) {
-        this.preferences = preferences;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String getBirthDate() {
-        return birthDate;
-    }
-
-    public void setBirthDate(String birthDate) {
-        this.birthDate = birthDate;
-    }
-
-    public int getViewerCount() {
-        return viewerCount;
-    }
-
-    public void setViewerCount(int viewerCount) {
-        this.viewerCount = viewerCount;
-    }
-
-    public List<String> getMangaLikes() {
-        return mangaLikes;
-    }
-
-    public void setMangaLikes(List<String> mangaLikes) {
-        this.mangaLikes = mangaLikes;
-    }
-
-    public List<String> getAuthorLikes() {
-        return authorLikes;
-    }
-
-    public void setAuthorLikes(List<String> authorLikes) {
-        this.authorLikes = authorLikes;
-    }
-
-    public Map<String, String> getSocialLinks() {
-        return socialLinks;
-    }
-
-    public void setSocialLinks(Map<String, String> socialLinks) {
-        this.socialLinks = socialLinks;
-    }
-
-    public Map<String, Object> getQuickNote() {
-        return quickNote;
-    }
-
-    public void setQuickNote(Map<String, Object> quickNote) {
-        this.quickNote = quickNote;
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", status='" + status + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", lastLogin=" + lastLogin +
+                ", roleId='" + roleId + '\'' +
+                '}';
     }
 }

@@ -47,7 +47,7 @@ public class UserServlet extends HttpServlet {
                 HttpSession session = request.getSession(false);
                 if (session == null || session.getAttribute("userId") == null) {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    out.print(gson.toJson(new ErrorResponse(false, "Not authenticated")));
+                    out.print(gson.toJson(Map.of("success", false, "message", "Not authenticated")));
                     return;
                 }
 
@@ -64,7 +64,7 @@ public class UserServlet extends HttpServlet {
                     out.print(gson.toJson(result));
                 } else {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    out.print(gson.toJson(new ErrorResponse(false, "User not found")));
+                    out.print(gson.toJson(Map.of("success", false, "message", "User not found")));
                 }
             } else if (pathInfo.equals("/check")) {
                 // Check if user is logged in
@@ -101,12 +101,12 @@ public class UserServlet extends HttpServlet {
                     out.print(gson.toJson(result));
                 } else {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    out.print(gson.toJson(new ErrorResponse(false, "User not found")));
+                    out.print(gson.toJson(Map.of("success", false, "message", "User not found")));
                 }
             }
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print(gson.toJson(new ErrorResponse(false, "Internal server error: " + e.getMessage())));
+            out.print(gson.toJson(Map.of("success", false, "message", "Internal server error: " + e.getMessage())));
         }
     }
 
@@ -130,8 +130,6 @@ public class UserServlet extends HttpServlet {
                 String username = loginData.get("username").getAsString();
                 String password = loginData.get("password").getAsString();
 
-                // For demo purposes, using plain text password
-                // In production, hash the password
                 User user = userDAO.authenticate(username, password);
 
                 if (user != null) {
@@ -139,7 +137,7 @@ public class UserServlet extends HttpServlet {
                     HttpSession session = request.getSession(true);
                     session.setAttribute("userId", user.getId());
                     session.setAttribute("username", user.getUsername());
-                    session.setAttribute("role", user.getRole());
+                    session.setAttribute("roleId", user.getRoleId());
                     session.setMaxInactiveInterval(30 * 60); // 30 minutes
 
                     // Don't send password to frontend
@@ -149,11 +147,11 @@ public class UserServlet extends HttpServlet {
                     result.put("success", true);
                     result.put("message", "Login successful");
                     result.put("user", user);
-                    result.put("redirectTo", "/"); // Redirect to home page
+                    result.put("redirectTo", "/");
                     out.print(gson.toJson(result));
                 } else {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    out.print(gson.toJson(new ErrorResponse(false, "Invalid username or password")));
+                    out.print(gson.toJson(Map.of("success", false, "message", "Invalid username or password")));
                 }
             } else if (pathInfo != null && pathInfo.equals("/logout")) {
                 // Handle logout
@@ -167,13 +165,45 @@ public class UserServlet extends HttpServlet {
                 result.put("message", "Logout successful");
                 result.put("redirectTo", "/");
                 out.print(gson.toJson(result));
+            } else if (pathInfo != null && pathInfo.equals("/register")) {
+                // Handle registration
+                BufferedReader reader = request.getReader();
+                JsonObject registerData = gson.fromJson(reader, JsonObject.class);
+
+                String username = registerData.get("username").getAsString();
+                String email = registerData.get("email").getAsString();
+                String password = registerData.get("password").getAsString();
+
+                // Check if username or email already exists
+                if (userDAO.findByUsername(username) != null) {
+                    response.setStatus(HttpServletResponse.SC_CONFLICT);
+                    out.print(gson.toJson(Map.of("success", false, "message", "Username already exists")));
+                    return;
+                }
+
+                if (userDAO.findByEmail(email) != null) {
+                    response.setStatus(HttpServletResponse.SC_CONFLICT);
+                    out.print(gson.toJson(Map.of("success", false, "message", "Email already exists")));
+                    return;
+                }
+
+                // Create new user
+                User newUser = new User(username, email, password);
+                User createdUser = userDAO.insert(newUser);
+                createdUser.setPassword(null);
+
+                Map<String, Object> result = new HashMap<>();
+                result.put("success", true);
+                result.put("message", "Registration successful");
+                result.put("user", createdUser);
+                out.print(gson.toJson(result));
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                out.print(gson.toJson(new ErrorResponse(false, "Endpoint not found")));
+                out.print(gson.toJson(Map.of("success", false, "message", "Endpoint not found")));
             }
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print(gson.toJson(new ErrorResponse(false, "Internal server error: " + e.getMessage())));
+            out.print(gson.toJson(Map.of("success", false, "message", "Internal server error: " + e.getMessage())));
         }
     }
 
@@ -191,7 +221,7 @@ public class UserServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            out.print(gson.toJson(new ErrorResponse(false, "Not authenticated")));
+            out.print(gson.toJson(Map.of("success", false, "message", "Not authenticated")));
             return;
         }
 
@@ -201,7 +231,7 @@ public class UserServlet extends HttpServlet {
 
             if (currentUser == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                out.print(gson.toJson(new ErrorResponse(false, "User not found")));
+                out.print(gson.toJson(Map.of("success", false, "message", "User not found")));
                 return;
             }
 
@@ -210,26 +240,18 @@ public class UserServlet extends HttpServlet {
             JsonObject updateData = gson.fromJson(reader, JsonObject.class);
 
             // Update user fields
-            if (updateData.has("displayName")) {
-                currentUser.setDisplayName(updateData.get("displayName").getAsString());
+            if (updateData.has("username")) {
+                currentUser.setUsername(updateData.get("username").getAsString());
             }
-            if (updateData.has("bio")) {
-                currentUser.setBio(updateData.get("bio").getAsString());
+            if (updateData.has("email")) {
+                currentUser.setEmail(updateData.get("email").getAsString());
             }
-            if (updateData.has("avatarUrl")) {
-                currentUser.setAvatarUrl(updateData.get("avatarUrl").getAsString());
-            }
-            if (updateData.has("socialLinks")) {
-                Map<String, String> socialLinks = gson.fromJson(updateData.get("socialLinks"), Map.class);
-                currentUser.setSocialLinks(socialLinks);
-            }
-            if (updateData.has("quickNote")) {
-                Map<String, Object> quickNote = gson.fromJson(updateData.get("quickNote"), Map.class);
-                currentUser.setQuickNote(quickNote);
+            if (updateData.has("status")) {
+                currentUser.setStatus(updateData.get("status").getAsString());
             }
 
-            // Update in database
-            User updatedUser = userDAO.update(currentUser);
+            // Update in database (without changing password)
+            User updatedUser = userDAO.updateProfile(currentUser);
             updatedUser.setPassword(null);
 
             Map<String, Object> result = new HashMap<>();
@@ -240,7 +262,7 @@ public class UserServlet extends HttpServlet {
 
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print(gson.toJson(new ErrorResponse(false, "Internal server error: " + e.getMessage())));
+            out.print(gson.toJson(Map.of("success", false, "message", "Internal server error: " + e.getMessage())));
         }
     }
 
@@ -253,20 +275,4 @@ public class UserServlet extends HttpServlet {
         response.setHeader("Access-Control-Allow-Headers", "Content-Type");
         response.setStatus(HttpServletResponse.SC_OK);
     }
-
-    // Error response class
-    private static class ErrorResponse {
-        private boolean success;
-        private String message;
-
-        public ErrorResponse(boolean success, String message) {
-            this.success = success;
-            this.message = message;
-        }
-
-        // Getters for JSON serialization
-        public boolean isSuccess() { return success; }
-        public String getMessage() { return message; }
-    }
 }
-
