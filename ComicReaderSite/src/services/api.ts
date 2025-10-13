@@ -50,10 +50,24 @@ class ApiService {
     }
 
     // Authentication endpoints
-    async login(username: string, password: string) {
+    // login supports being called either:
+    //  - login(identifier, password)
+    //  - login({ email | username, password })
+    // It will always send a payload that has an "email" property (the server expects that field name).
+    async login(identifierOrObj: any, password?: string) {
+        let identifier: string | undefined;
+
+        if (typeof identifierOrObj === 'object' && identifierOrObj !== null) {
+            identifier = identifierOrObj.email ?? identifierOrObj.username;
+            password = identifierOrObj.password;
+        } else {
+            identifier = identifierOrObj;
+        }
+
+        // always send as "email" so backend's LoginRequest.email is populated
         return this.request('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ email: identifier, password }),
         });
     }
 
@@ -75,7 +89,7 @@ class ApiService {
         });
     }
 
-    // Dashboard endpoints
+    // ... other methods unchanged ...
     async getDashboardStats() {
         return this.request('/dashboard/stats');
     }
@@ -84,7 +98,6 @@ class ApiService {
         return this.request('/dashboard/activity');
     }
 
-    // Manga endpoints
     async getMangaList() {
         return this.request('/manga');
     }
@@ -113,7 +126,6 @@ class ApiService {
         });
     }
 
-    // Moderation endpoints
     async getModerationReports() {
         return this.request('/moderation/reports');
     }
@@ -122,7 +134,6 @@ class ApiService {
         return this.request('/moderation/approval');
     }
 
-    // User management endpoints
     async getUserList(page: number = 1, limit: number = 10) {
         return this.request(`/users?page=${page}&limit=${limit}`);
     }
