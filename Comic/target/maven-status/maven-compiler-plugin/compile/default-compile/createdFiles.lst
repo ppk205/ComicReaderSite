@@ -16,6 +16,7 @@ reader\site\Comic\entity\UserRoleEntity.class
 reader\site\Comic\model\ModerationSubmission.class
 reader\site\Comic\entity\PermissionEntity.class
 reader\site\Comic\servlet\ModerationServlet.class
+reader\site\Comic\util\PasswordUtil.class
 reader\site\Comic\service\DashboardService.class
 reader\site\Comic\entity\MangaEntity.class
 reader\site\Comic\entity\UserEntity.class
@@ -23,6 +24,7 @@ reader\site\Comic\persistence\StringListConverter$1.class
 reader\site\Comic\model\ActivityItem.class
 reader\site\Comic\model\ModerationReport.class
 reader\site\Comic\model\Manga.class
+reader\site\Comic\model\RegisterRequest.class
 reader\site\Comic\model\User.class
 reader\site\Comic\model\UserRole.class
 reader\site\Comic\servlet\AuthServlet.class

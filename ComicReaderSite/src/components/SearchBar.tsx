@@ -16,7 +16,7 @@ export default function SearchBar() {
   useEffect(() => {
     const fetchMangaList = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/manga");
+        const res = await fetch("http://localhost:8080/Comic/api/manga");
         if (res.ok) {
           const data = await res.json();
           setMangaList(data);
