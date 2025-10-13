@@ -4,6 +4,7 @@ import reader.site.Comic.dao.RoleDAO;
 import reader.site.Comic.dao.UserDAO;
 import reader.site.Comic.model.User;
 import reader.site.Comic.model.UserRole;
+import reader.site.Comic.util.PasswordUtil;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -26,7 +27,9 @@ public class AuthService {
             return null;
         }
         User user = userOpt.get();
-        if (user.getPassword() == null || !user.getPassword().equals(password)) {
+        String stored = user.getPassword();
+        // Use bcrypt verification if stored password is a bcrypt hash.
+        if (stored == null || !PasswordUtil.verify(password, stored)) {
             return null;
         }
         user.setLastLogin(Instant.now().truncatedTo(ChronoUnit.SECONDS).toString());

@@ -8,6 +8,7 @@ import reader.site.Comic.dao.RoleDAO;
 import reader.site.Comic.dao.UserDAO;
 import reader.site.Comic.model.AuthResponse;
 import reader.site.Comic.model.LoginRequest;
+import reader.site.Comic.model.RegisterRequest;
 import reader.site.Comic.model.User;
 import reader.site.Comic.model.UserRole;
 import reader.site.Comic.service.AuthService;
@@ -20,13 +21,15 @@ public class AuthServlet extends BaseServlet {
     private AuthService authService;
     private TokenService tokenService;
     private UserDAO userDAO;
+    private RoleDAO roleDAO;
 
     @Override
     public void init() throws ServletException {
         this.userDAO = new UserDAO();
-        RoleDAO roleDAO = new RoleDAO();
+        this.roleDAO = new RoleDAO();
         this.tokenService = new TokenService();
         this.authService = new AuthService(userDAO, roleDAO, tokenService);
+        this.roleDAO = roleDAO;
     }
 
     @Override
@@ -42,6 +45,8 @@ public class AuthServlet extends BaseServlet {
             handleLogin(req, resp);
         } else if (path.equals("/logout")) {
             handleLogout(req, resp);
+        } else if (path.equals("/register")) {
+            handleRegister(req, resp);
         } else {
             writeError(resp, HttpServletResponse.SC_NOT_FOUND, "Endpoint not found");
         }
@@ -72,12 +77,49 @@ public class AuthServlet extends BaseServlet {
         writeJson(resp, new AuthResponse(token, user));
     }
 
+    private void handleRegister(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        RegisterRequest registerRequest = readJson(resp, req, RegisterRequest.class);
+        if (registerRequest == null) {
+            return;
+        }
+
+        if (registerRequest.getUsername() == null || registerRequest.getUsername().isBlank() ||
+                registerRequest.getPassword() == null || registerRequest.getPassword().isBlank() ||
+                registerRequest.getEmail() == null || registerRequest.getEmail().isBlank()) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "username, email and password are required");
+            return;
+        }
+
+        // Check username availability
+        if (userDAO.findByUsername(registerRequest.getUsername()).isPresent()) {
+            writeError(resp, HttpServletResponse.SC_CONFLICT, "Username already taken");
+            return;
+        }
+
+        // Build new user (UserDAO.create will hash password if you have PasswordUtil wired)
+        User newUser = new User();
+        newUser.setUsername(registerRequest.getUsername());
+        newUser.setEmail(registerRequest.getEmail());
+        newUser.setPassword(registerRequest.getPassword());
+        // default role: role-user
+        UserRole defaultRole = roleDAO.findById("role-user");
+        if (defaultRole != null) {
+            newUser.setRole(defaultRole);
+        }
+
+        User created = userDAO.create(newUser);
+
+        // Issue token and return same shape as login for client convenience
+        String token = authService.issueToken(created);
+        writeJson(resp, new AuthResponse(token, created));
+    }
+
     private void handleLogout(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String token = extractToken(req);
         if (token != null) {
             authService.invalidateToken(token);
         }
-    writeJson(resp, new MessageResponse("Logged out"));
+        writeJson(resp, new MessageResponse("Logged out"));
     }
 
     private void handleCurrentUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
