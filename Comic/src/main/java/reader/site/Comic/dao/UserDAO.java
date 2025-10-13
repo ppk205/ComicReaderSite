@@ -1,273 +1,358 @@
 package reader.site.Comic.dao;
 
-import reader.site.Comic.config.DatabaseConfig;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import reader.site.Comic.entity.UserEntity;
+import reader.site.Comic.entity.UserRoleEntity;
 import reader.site.Comic.model.User;
+import reader.site.Comic.model.UserRole;
+import reader.site.Comic.persistence.JPAUtil;
+import reader.site.Comic.util.PasswordUtil;
 
-import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class UserDAO {
+    private final RoleDAO roleDAO = new RoleDAO();
 
     public UserDAO() {
+        seedDefaults();
+    }
+
+    public List<User> findAll(int page, int limit, String search, String roleName, String status) {
+        EntityManager em = JPAUtil.getEntityManager();
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("MySQL JDBC Driver not found", e);
-        }
-    }
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<UserEntity> cq = cb.createQuery(UserEntity.class);
+            Root<UserEntity> root = cq.from(UserEntity.class);
 
-    private Connection getConnection() throws SQLException {
-        return DatabaseConfig.getConnection();
-    }
+            List<Predicate> predicates = new ArrayList<>();
 
-    // CREATE
-    public User insert(User user) {
-        String sql = "INSERT INTO users (username, email, password, status, role_id) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            stmt.setString(1, user.getUsername());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getPassword());
-            stmt.setString(4, user.getStatus() != null ? user.getStatus() : "active");
-            stmt.setString(5, user.getRoleId() != null ? user.getRoleId() : "1");
-
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows == 0) {
-                throw new SQLException("Creating user failed, no rows affected.");
+            if (search != null && !search.isBlank()) {
+                String pattern = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("username")), pattern),
+                        cb.like(cb.lower(root.get("email")), pattern)
+                ));
             }
 
-            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    user.setId(String.valueOf(generatedKeys.getLong(1)));
-                }
+            if (roleName != null && !roleName.isBlank()) {
+                predicates.add(cb.equal(cb.lower(root.get("role").get("name")), roleName.toLowerCase()));
             }
-            return user;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error inserting user: " + e.getMessage(), e);
-        }
-    }
 
-    // READ by ID
-    public User findById(String id) {
-        String sql = "SELECT * FROM users WHERE id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setLong(1, Long.parseLong(id));
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return mapResultSetToUser(rs);
+            if (status != null && !status.isBlank()) {
+                predicates.add(cb.equal(cb.lower(root.get("status")), status.toLowerCase()));
             }
-            return null;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error finding user by ID: " + e.getMessage(), e);
+
+            cq.select(root)
+                    .where(predicates.toArray(new Predicate[0]))
+                    .orderBy(cb.desc(root.get("createdAt")));
+
+            TypedQuery<UserEntity> query = em.createQuery(cq);
+            query.setFirstResult((Math.max(page, 1) - 1) * Math.max(limit, 1));
+            query.setMaxResults(Math.max(limit, 1));
+
+            return query.getResultList().stream().map(this::toModel).collect(java.util.stream.Collectors.toList());
+        } finally {
+            em.close();
         }
     }
 
-    // READ by username
-    public User findByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE username = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public int count(String search, String roleName, String status) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<UserEntity> root = cq.from(UserEntity.class);
 
-            stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
+            List<Predicate> predicates = new ArrayList<>();
 
-            if (rs.next()) {
-                return mapResultSetToUser(rs);
+            if (search != null && !search.isBlank()) {
+                String pattern = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("username")), pattern),
+                        cb.like(cb.lower(root.get("email")), pattern)
+                ));
             }
-            return null;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error finding user by username: " + e.getMessage(), e);
-        }
-    }
 
-    // READ by email
-    public User findByEmail(String email) {
-        String sql = "SELECT * FROM users WHERE email = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, email);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return mapResultSetToUser(rs);
+            if (roleName != null && !roleName.isBlank()) {
+                predicates.add(cb.equal(cb.lower(root.get("role").get("name")), roleName.toLowerCase()));
             }
-            return null;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error finding user by email: " + e.getMessage(), e);
-        }
-    }
 
-    // READ ALL
-    public List<User> findAll() {
-        String sql = "SELECT * FROM users ORDER BY created_at DESC";
-        List<User> users = new ArrayList<>();
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                users.add(mapResultSetToUser(rs));
+            if (status != null && !status.isBlank()) {
+                predicates.add(cb.equal(cb.lower(root.get("status")), status.toLowerCase()));
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error finding all users: " + e.getMessage(), e);
+
+            cq.select(cb.count(root)).where(predicates.toArray(new Predicate[0]));
+            return em.createQuery(cq).getSingleResult().intValue();
+        } finally {
+            em.close();
         }
-        return users;
     }
 
-    // UPDATE
-    public User update(User user) {
-        String sql = "UPDATE users SET username = ?, email = ?, password = ?, status = ?, role_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+    public Optional<User> findById(String id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            UserEntity entity = em.find(UserEntity.class, id);
+            return Optional.ofNullable(entity).map(this::toModel);
+        } finally {
+            em.close();
+        }
+    }
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, user.getUsername());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getPassword());
-            stmt.setString(4, user.getStatus());
-            stmt.setString(5, user.getRoleId());
-            stmt.setLong(6, Long.parseLong(user.getId()));
-
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows == 0) {
-                throw new SQLException("Updating user failed, no rows affected.");
+    public Optional<User> findByUsername(String username) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            TypedQuery<UserEntity> query = em.createQuery(
+                    "SELECT u FROM UserEntity u WHERE LOWER(u.username) = :username", UserEntity.class);
+            query.setParameter("username", username.toLowerCase());
+            List<UserEntity> results = query.getResultList();
+            if (results.isEmpty()) {
+                return Optional.empty();
             }
-            return user;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error updating user: " + e.getMessage(), e);
+            return Optional.of(toModel(results.get(0)));
+        } finally {
+            em.close();
         }
     }
 
-    // UPDATE profile fields (without password)
-    public User updateProfile(User user) {
-        String sql = "UPDATE users SET username = ?, email = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, user.getUsername());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getStatus());
-            stmt.setLong(4, Long.parseLong(user.getId()));
-
-            int affectedRows = stmt.executeUpdate();
-            if (affectedRows == 0) {
-                throw new SQLException("Updating user profile failed, no rows affected.");
+    public User create(User user) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            UserEntity entity = new UserEntity();
+            applyToEntity(em, entity, user);
+            em.persist(entity);
+            em.getTransaction().commit();
+            return toModel(entity);
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
             }
-            return user;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error updating user profile: " + e.getMessage(), e);
+            throw ex;
+        } finally {
+            em.close();
         }
     }
 
-    // UPDATE last login
-    public void updateLastLogin(String userId) {
-        String sql = "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setLong(1, Long.parseLong(userId));
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Error updating last login: " + e.getMessage(), e);
+    public User update(String id, User updates) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            UserEntity entity = em.find(UserEntity.class, id);
+            if (entity == null) {
+                em.getTransaction().rollback();
+                return null;
+            }
+            applyPartialUpdate(em, entity, updates);
+            em.getTransaction().commit();
+            return toModel(entity);
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw ex;
+        } finally {
+            em.close();
         }
     }
 
-    // DELETE
     public boolean delete(String id) {
-        String sql = "DELETE FROM users WHERE id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setLong(1, Long.parseLong(id));
-            int affectedRows = stmt.executeUpdate();
-            return affectedRows > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error deleting user: " + e.getMessage(), e);
-        }
-    }
-
-    // LOGIN - validate user credentials
-    public User authenticate(String username, String password) {
-        String sql = "SELECT * FROM users WHERE username = ? AND password = ? AND status = 'active'";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, username);
-            stmt.setString(2, password); // In production, use hashed passwords
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                User user = mapResultSetToUser(rs);
-                // Update last login
-                updateLastLogin(user.getId());
-                return user;
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            UserEntity entity = em.find(UserEntity.class, id);
+            if (entity == null) {
+                em.getTransaction().rollback();
+                return false;
             }
-            return null;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error authenticating user: " + e.getMessage(), e);
-        }
-    }
-
-    // Get users by role
-    public List<User> findByRole(String roleId) {
-        String sql = "SELECT * FROM users WHERE role_id = ? ORDER BY created_at DESC";
-        List<User> users = new ArrayList<>();
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, roleId);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                users.add(mapResultSetToUser(rs));
+            em.remove(entity);
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error finding users by role: " + e.getMessage(), e);
+            throw ex;
+        } finally {
+            em.close();
         }
-        return users;
     }
 
-    // Get users by status
-    public List<User> findByStatus(String status) {
-        String sql = "SELECT * FROM users WHERE status = ? ORDER BY created_at DESC";
-        List<User> users = new ArrayList<>();
+    public List<User> findAllUsers() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            TypedQuery<UserEntity> query = em.createQuery("SELECT u FROM UserEntity u", UserEntity.class);
+            return query.getResultList().stream().map(this::toModel).collect(java.util.stream.Collectors.toList());
+        } finally {
+            em.close();
+        }
+    }
 
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    /**
+     * Apply all fields from source User to entity. Password will be hashed with bcrypt
+     * if it's not already a bcrypt hash.
+     */
+    private void applyToEntity(EntityManager em, UserEntity entity, User source) {
+        entity.setUsername(source.getUsername());
+        entity.setEmail(source.getEmail());
 
-            stmt.setString(1, status);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                users.add(mapResultSetToUser(rs));
+        if (source.getPassword() != null) {
+            String pw = source.getPassword();
+            // If already bcrypt hash, leave it. Otherwise hash it.
+            if (PasswordUtil.isBCryptHash(pw)) {
+                entity.setPassword(pw);
+            } else {
+                entity.setPassword(PasswordUtil.hash(pw));
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error finding users by status: " + e.getMessage(), e);
         }
-        return users;
+
+        entity.setStatus(source.getStatus() != null ? source.getStatus() : "active");
+        if (source.getCreatedAt() != null) {
+            entity.setCreatedAt(parseInstant(source.getCreatedAt()));
+        }
+        if (source.getUpdatedAt() != null) {
+            entity.setUpdatedAt(parseInstant(source.getUpdatedAt()));
+        }
+        if (source.getLastLogin() != null) {
+            entity.setLastLogin(parseInstant(source.getLastLogin()));
+        }
+        UserRoleEntity role = null;
+        if (source.getRole() != null && source.getRole().getId() != null) {
+            role = roleDAO.findEntityById(em, source.getRole().getId());
+        }
+        if (role == null && source.getRole() != null && source.getRole().getName() != null) {
+            role = roleDAO.findEntityByName(em, source.getRole().getName());
+        }
+        if (role != null) {
+            entity.setRole(role);
+        } else {
+            // default to regular user role
+            entity.setRole(roleDAO.findEntityById(em, "role-user"));
+        }
+        if (source.getId() != null) {
+            entity.setId(source.getId());
+        }
     }
 
-    // Helper method to map ResultSet to User object
-    private User mapResultSetToUser(ResultSet rs) throws SQLException {
+    /**
+     * Apply only provided updates to existing entity. If password present and not empty,
+     * it will be hashed before being set (unless it's already a bcrypt hash).
+     */
+    private void applyPartialUpdate(EntityManager em, UserEntity entity, User updates) {
+        if (updates.getUsername() != null) {
+            entity.setUsername(updates.getUsername());
+        }
+        if (updates.getEmail() != null) {
+            entity.setEmail(updates.getEmail());
+        }
+        if (updates.getPassword() != null && !updates.getPassword().isBlank()) {
+            String pw = updates.getPassword();
+            if (PasswordUtil.isBCryptHash(pw)) {
+                entity.setPassword(pw);
+            } else {
+                entity.setPassword(PasswordUtil.hash(pw));
+            }
+        }
+        if (updates.getStatus() != null) {
+            entity.setStatus(updates.getStatus());
+        }
+        if (updates.getLastLogin() != null) {
+            entity.setLastLogin(parseInstant(updates.getLastLogin()));
+        }
+        if (updates.getRole() != null) {
+            UserRoleEntity role = null;
+            if (updates.getRole().getId() != null) {
+                role = roleDAO.findEntityById(em, updates.getRole().getId());
+            }
+            if (role == null && updates.getRole().getName() != null) {
+                role = roleDAO.findEntityByName(em, updates.getRole().getName());
+            }
+            if (role != null) {
+                entity.setRole(role);
+            }
+        }
+    }
+
+    private User toModel(UserEntity entity) {
         User user = new User();
-        user.setId(String.valueOf(rs.getLong("id")));
-        user.setUsername(rs.getString("username"));
-        user.setEmail(rs.getString("email"));
-        user.setPassword(rs.getString("password"));
-        user.setStatus(rs.getString("status"));
-        user.setCreatedAt(rs.getTimestamp("created_at"));
-        user.setUpdatedAt(rs.getTimestamp("updated_at"));
-        user.setLastLogin(rs.getTimestamp("last_login"));
-        user.setRoleId(rs.getString("role_id"));
+        user.setId(entity.getId());
+        user.setUsername(entity.getUsername());
+        user.setEmail(entity.getEmail());
+        // keep the hashed password in model for server-side usage (transient in model ensures not serialized)
+        user.setPassword(entity.getPassword());
+        user.setStatus(entity.getStatus());
+        user.setCreatedAt(formatInstant(entity.getCreatedAt()));
+        user.setUpdatedAt(formatInstant(entity.getUpdatedAt()));
+        user.setLastLogin(formatInstant(entity.getLastLogin()));
+        user.setRole(roleDAO.toModel(entity.getRole()));
         return user;
+    }
+
+    private void seedDefaults() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            long count = em.createQuery("SELECT COUNT(u) FROM UserEntity u", Long.class).getSingleResult();
+            if (count > 0) {
+                return;
+            }
+
+            em.getTransaction().begin();
+            createDefaultUser(em, "admin-001", "admin", "admin@comicreader.com", "admin123", "role-admin");
+            createDefaultUser(em, "mod-001", "moderator", "mod@comicreader.com", "mod123", "role-moderator");
+            createDefaultUser(em, "editor-001", "editor", "editor@comicreader.com", "editor123", "role-editor");
+            createDefaultUser(em, "user-001", "reader", "reader@comicreader.com", "reader123", "role-user");
+            em.getTransaction().commit();
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw ex;
+        } finally {
+            em.close();
+        }
+    }
+
+    private void createDefaultUser(EntityManager em,
+                                   String id,
+                                   String username,
+                                   String email,
+                                   String password,
+                                   String roleId) {
+        UserEntity entity = new UserEntity();
+        entity.setId(id);
+        entity.setUsername(username);
+        entity.setEmail(email);
+        // keep legacy seeded hashes as-is (they are not bcrypt). PasswordUtil.verify has a fallback.
+        if (password != null) {
+            String passwordToStore = PasswordUtil.isBCryptHash(password) ? password : PasswordUtil.hash(password);
+            entity.setPassword(passwordToStore);
+        } else {
+            entity.setPassword(null);
+        }
+        entity.setStatus("active");
+        entity.setRole(roleDAO.findEntityById(em, roleId));
+        entity.setCreatedAt(Instant.now().minusSeconds(86400L));
+        entity.setUpdatedAt(Instant.now().minusSeconds(3600L));
+        entity.setLastLogin(Instant.now().minusSeconds(600L));
+        em.persist(entity);
+    }
+
+    private String formatInstant(Instant instant) {
+        return instant != null ? instant.toString() : null;
+    }
+
+    private Instant parseInstant(String value) {
+        try {
+            return value != null ? Instant.parse(value) : null;
+        } catch (Exception ex) {
+            return null;
+        }
     }
 }

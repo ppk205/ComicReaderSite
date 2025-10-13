@@ -13,9 +13,6 @@ export default function SearchBar() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080/Comic/api/manga';
-
   useEffect(() => {
     const fetchMangaList = async () => {
       try {

@@ -1,0 +1,31 @@
+<<<<<<< HEAD
+#Front-end - node18
+FROM node:18-alpine AS build
+WORKDIR /app
+#copy package.json and package-lock.json để cache dependencies
+COPY package*.json ./
+#cài đặt package
+RUN npm install
+#copy toàn bộ source code
+COPY . .
+#build project
+RUN npm run build
+
+EXPOSE 3000
+CMD ["npm", "start"]
+=======
+#Front-end - node18
+FROM node:18-alpine AS build
+WORKDIR /app
+#copy package.json and package-lock.json để cache dependencies
+COPY package*.json ./
+#cài đặt package
+RUN npm install
+#copy toàn bộ source code
+COPY . .
+#build project
+RUN npm run build
+
+EXPOSE 3000
+CMD ["npm", "start"]
+>>>>>>> 8056ef92f9ca6650cbc5711d7c4ba2540a5acd06

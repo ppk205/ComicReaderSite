@@ -1,31 +1,38 @@
 package reader.site.Comic.model;
 
-import java.sql.Timestamp;
-
 public class User {
     private String id;
     private String username;
     private String email;
-    private String password;
+    private transient String password;
+    private UserRole role;
     private String status;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
-    private Timestamp lastLogin;
-    private String roleId;
+    private String createdAt;
+    private String updatedAt;
+    private String lastLogin;
 
-    // Default constructor
-    public User() {
-    }
+    public User() {}
 
-    // Constructor with essential fields
-    public User(String username, String email, String password) {
+    public User(String id,
+                String username,
+                String email,
+                String password,
+                UserRole role,
+                String status,
+                String createdAt,
+                String updatedAt,
+                String lastLogin) {
+        this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
-        this.status = "active";
+        this.role = role;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.lastLogin = lastLogin;
     }
 
-    // Getters and Setters
     public String getId() {
         return id;
     }
@@ -58,6 +65,14 @@ public class User {
         this.password = password;
     }
 
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -66,49 +81,27 @@ public class User {
         this.status = status;
     }
 
-    public Timestamp getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Timestamp createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Timestamp getUpdatedAt() {
+    public String getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(Timestamp updatedAt) {
+    public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public Timestamp getLastLogin() {
+    public String getLastLogin() {
         return lastLogin;
     }
 
-    public void setLastLogin(Timestamp lastLogin) {
+    public void setLastLogin(String lastLogin) {
         this.lastLogin = lastLogin;
-    }
-
-    public String getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(String roleId) {
-        this.roleId = roleId;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id='" + id + '\'' +
-                ", username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", status='" + status + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                ", lastLogin=" + lastLogin +
-                ", roleId='" + roleId + '\'' +
-                '}';
     }
 }

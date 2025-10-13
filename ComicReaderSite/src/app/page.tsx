@@ -1,57 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
-
-const MangaCard = ({ manga, featured = false }) => (
-  <div
-    className={`bg-gray-500 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow ${featured ? "h-64" : "h-56"
-      }`}
-  >
-    <div className="flex h-full">
-      <div className={`${featured ? "w-24" : "w-20"} flex-shrink-0`}>
-        <img
-          src={manga.coverUrl || manga.cover}
-          alt={manga.title}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src =
-              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='140' viewBox='0 0 100 140'%3E%3Crect width='100' height='140' fill='%23f3f4f6'/%3E%3Ctext x='50' y='70' text-anchor='middle' fill='%236b7280' font-size='12'%3EManga%3C/text%3E%3C/svg%3E";
-          }}
-        />
-      </div>
-      <div className="flex-1 p-3 flex flex-col">
-        <h3
-          className={`font-semibold text-white mb-2 ${featured ? "text-lg" : "text-base"
-            } line-clamp-2`}
-        >
-          {manga.title}
-        </h3>
-        <div className="flex-1">
-          <p className="text-sm text-white mb-1">Recent Chapters:</p>
-          <div className="space-y-1">
-            {manga.chapters && manga.chapters.length > 0 ? (
-              manga.chapters.slice(0, 3).map((chapter, index) => (
-                <div
-                  key={index}
-                  className="text-sm text-purple-300 hover:text-blue-800 cursor-pointer truncate"
-                >
-                  {typeof chapter === 'string' ? chapter : `Chapter ${chapter.number}`}
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-gray-400">No chapters available</div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
+import MangaCard from "@/components/MangaCard";
 
 export default function Home() {
-  const router = useRouter();
   const [featuredManga, setFeaturedManga] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +14,11 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const perPage = 12;
 
-  // ✅ Fetch manga from Spring Boot backend
+  // ✅ Base URL from env or fallback
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/Comic/api";
+
+  // ✅ Fetch manga from backend
   useEffect(() => {
     async function fetchData() {
       try {
@@ -102,27 +58,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-950">
-      {/* Navigation Bar */}
-      <nav className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-purple-400">Comic Reader</h1>
-          <div className="flex gap-4">
-            <button
-              onClick={() => router.push('/profile')}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
-            >
-              Profile
-            </button>
-            <button
-              onClick={() => router.push('/login')}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-            >
-              Login
-            </button>
-          </div>
-        </div>
-      </nav>
-
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Featured Section */}
         <section className="mb-12">
@@ -153,7 +88,11 @@ export default function Home() {
               }}
               className="px-3 py-2 border rounded-lg w-full md:w-1/3"
             />
+            <label htmlFor="sort-select" className="sr-only">
+              Sort manga
+            </label>
             <select
+              id="sort-select"
               value={sort}
               onChange={(e) => setSort(e.target.value)}
               className="px-3 py-2 border rounded-lg"
