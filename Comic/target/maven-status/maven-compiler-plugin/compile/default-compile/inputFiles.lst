@@ -1,33 +1,35 @@
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\service\ModerationService.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\dao\MangaDAO.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\UserRole.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\service\AuthService.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\entity\PermissionEntity.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\LoginRequest.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\entity\UserRoleEntity.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\ModerationServlet.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\Manga.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\dao\RoleDAO.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\service\SystemSettingsService.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\persistence\JPAUtil.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\AuthServlet.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\ModerationReport.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\DashboardStats.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\dao\UserDAO.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\ActivityItem.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\UserServlet.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\persistence\StringListConverter.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\BaseServlet.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\entity\MangaEntity.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\AuthResponse.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\SystemSettings.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\DashboardServlet.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\HealthServlet.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\MangaServlet.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\service\TokenService.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\Permission.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\service\DashboardService.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\User.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\entity\UserEntity.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\SettingsServlet.java
-D:\phuc\Code Project\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\ModerationSubmission.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\entity\PermissionEntity.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\entity\UserRoleEntity.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\Manga.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\service\ModerationService.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\Permission.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\UserRole.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\DashboardServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\AuthServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\HealthServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\ActivityItem.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\service\DashboardService.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\persistence\JPAUtil.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\ModerationServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\entity\UserEntity.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\AuthResponse.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\entity\MangaEntity.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\dao\UserDAO.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\UserServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\util\PasswordUtil.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\dao\MangaDAO.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\BaseServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\ModerationReport.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\dao\RoleDAO.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\SystemSettings.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\service\TokenService.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\DashboardStats.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\User.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\RegisterRequest.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\LoginRequest.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\SettingsServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\service\SystemSettingsService.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\service\AuthService.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\servlet\MangaServlet.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\persistence\StringListConverter.java
+D:\Desktop\HK1_2025_2026\Part1\WEPR\Project\Clone5\ComicReaderSite\Comic\src\main\java\reader\site\Comic\model\ModerationSubmission.java

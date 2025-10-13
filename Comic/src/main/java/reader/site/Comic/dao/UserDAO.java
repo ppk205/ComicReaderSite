@@ -11,6 +11,7 @@ import reader.site.Comic.entity.UserRoleEntity;
 import reader.site.Comic.model.User;
 import reader.site.Comic.model.UserRole;
 import reader.site.Comic.persistence.JPAUtil;
+import reader.site.Comic.util.PasswordUtil;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -194,10 +195,24 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Apply all fields from source User to entity. Password will be hashed with bcrypt
+     * if it's not already a bcrypt hash.
+     */
     private void applyToEntity(EntityManager em, UserEntity entity, User source) {
         entity.setUsername(source.getUsername());
         entity.setEmail(source.getEmail());
-        entity.setPassword(source.getPassword());
+
+        if (source.getPassword() != null) {
+            String pw = source.getPassword();
+            // If already bcrypt hash, leave it. Otherwise hash it.
+            if (PasswordUtil.isBCryptHash(pw)) {
+                entity.setPassword(pw);
+            } else {
+                entity.setPassword(PasswordUtil.hash(pw));
+            }
+        }
+
         entity.setStatus(source.getStatus() != null ? source.getStatus() : "active");
         if (source.getCreatedAt() != null) {
             entity.setCreatedAt(parseInstant(source.getCreatedAt()));
@@ -226,6 +241,10 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Apply only provided updates to existing entity. If password present and not empty,
+     * it will be hashed before being set (unless it's already a bcrypt hash).
+     */
     private void applyPartialUpdate(EntityManager em, UserEntity entity, User updates) {
         if (updates.getUsername() != null) {
             entity.setUsername(updates.getUsername());
@@ -234,7 +253,12 @@ public class UserDAO {
             entity.setEmail(updates.getEmail());
         }
         if (updates.getPassword() != null && !updates.getPassword().isBlank()) {
-            entity.setPassword(updates.getPassword());
+            String pw = updates.getPassword();
+            if (PasswordUtil.isBCryptHash(pw)) {
+                entity.setPassword(pw);
+            } else {
+                entity.setPassword(PasswordUtil.hash(pw));
+            }
         }
         if (updates.getStatus() != null) {
             entity.setStatus(updates.getStatus());
@@ -261,6 +285,7 @@ public class UserDAO {
         user.setId(entity.getId());
         user.setUsername(entity.getUsername());
         user.setEmail(entity.getEmail());
+        // keep the hashed password in model for server-side usage (transient in model ensures not serialized)
         user.setPassword(entity.getPassword());
         user.setStatus(entity.getStatus());
         user.setCreatedAt(formatInstant(entity.getCreatedAt()));
@@ -279,10 +304,10 @@ public class UserDAO {
             }
 
             em.getTransaction().begin();
-            createDefaultUser(em, "admin-001", "admin", "admin@comicreader.com", "admin123", "role-admin");
-            createDefaultUser(em, "mod-001", "moderator", "mod@comicreader.com", "moderator123", "role-moderator");
-            createDefaultUser(em, "editor-001", "editor", "editor@comicreader.com", "editor123", "role-editor");
-            createDefaultUser(em, "user-001", "reader", "reader@comicreader.com", "reader123", "role-user");
+            createDefaultUser(em, "admin-001", "admin", "admin@comicreader.com", "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", "role-admin");
+            createDefaultUser(em, "mod-001", "moderator", "mod@comicreader.com", "4c8425b174053ea6935b29c2b0e0aa4e2eab1a01b784e6ac91b8bdce9c26235a", "role-moderator");
+            createDefaultUser(em, "editor-001", "editor", "editor@comicreader.com", "ef5e5a1fb95055e0e56cccf98a41e784a132c14e7f6e1ba244302f0e72b29baf", "role-editor");
+            createDefaultUser(em, "user-001", "reader", "reader@comicreader.com", "128a1cb71e153e042708de7ea043d9a030fc1a83fa258788e7ef7aa23309eb72", "role-user");
             em.getTransaction().commit();
         } catch (Exception ex) {
             if (em.getTransaction().isActive()) {
@@ -304,6 +329,7 @@ public class UserDAO {
         entity.setId(id);
         entity.setUsername(username);
         entity.setEmail(email);
+        // keep legacy seeded hashes as-is (they are not bcrypt). PasswordUtil.verify has a fallback.
         entity.setPassword(password);
         entity.setStatus("active");
         entity.setRole(roleDAO.findEntityById(em, roleId));
