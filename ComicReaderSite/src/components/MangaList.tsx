@@ -17,7 +17,7 @@ export default function MangaList() {
 
     useEffect(() => {
         // ✅ Replace this with your actual API endpoint
-        fetch("https://your-api-endpoint.com/manga")
+        fetch("http://localhost:8080/Comic/api/manga")
             .then((res) => {
                 if (!res.ok) throw new Error("Failed to fetch manga list");
                 return res.json();
