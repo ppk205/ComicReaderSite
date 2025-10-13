@@ -15,7 +15,7 @@ import reader.site.Comic.service.TokenService;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/api/manga/*")
+@WebServlet(name = "MangaServlet", urlPatterns = "/api/manga/*")
 public class MangaServlet extends BaseServlet {
     private MangaDAO mangaDAO;
     private AuthService authService;

@@ -35,7 +35,11 @@ class ApiService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // try to parse error body for better message
+        let errBody = null;
+        try { errBody = await response.json(); } catch {}
+        const msg = errBody && errBody.message ? errBody.message : `HTTP error! status: ${response.status}`;
+        throw new Error(msg);
       }
 
       return await response.json();
@@ -47,94 +51,102 @@ class ApiService {
 
   // Authentication endpoints
   async login(username: string, password: string) {
-  return this.request('/auth/login', {
+    return this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     });
   }
 
   async logout() {
-  return this.request('/auth/logout', {
+    return this.request('/auth/logout', {
       method: 'POST',
     });
   }
 
   async getCurrentUser() {
-  return this.request('/auth/me');
+    return this.request('/auth/me');
+  }
+
+  // Register endpoint (matches /api/auth/register on backend)
+  async register(username: string, email: string, password: string) {
+    return this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password }),
+    });
   }
 
   // Dashboard endpoints
   async getDashboardStats() {
-  return this.request('/dashboard/stats');
+    return this.request('/dashboard/stats');
   }
 
   async getRecentActivity() {
-  return this.request('/dashboard/activity');
+    return this.request('/dashboard/activity');
   }
 
   // Manga endpoints
   async getMangaList() {
-  return this.request('/manga');
+    return this.request('/manga');
   }
 
   async getMangaById(id: string) {
-  return this.request(`/manga/${id}`);
+    return this.request(`/manga/${id}`);
   }
 
   async createManga(mangaData: any) {
-  return this.request('/manga', {
+    return this.request('/manga', {
       method: 'POST',
       body: JSON.stringify(mangaData),
     });
   }
 
   async updateManga(id: string, mangaData: any) {
-  return this.request(`/manga/${id}`, {
+    return this.request(`/manga/${id}`, {
       method: 'PUT',
       body: JSON.stringify(mangaData),
     });
   }
 
   async deleteManga(id: string) {
-  return this.request(`/manga/${id}`, {
+    return this.request(`/manga/${id}`, {
       method: 'DELETE',
     });
   }
 
   // Moderation endpoints
   async getModerationReports() {
-  return this.request('/moderation/reports');
+    return this.request('/moderation/reports');
   }
 
   async getModerationQueue() {
-  return this.request('/moderation/approval');
+    return this.request('/moderation/approval');
   }
 
   // User management endpoints
   async getUserList(page: number = 1, limit: number = 10) {
-  return this.request(`/users?page=${page}&limit=${limit}`);
+    return this.request(`/users?page=${page}&limit=${limit}`);
   }
 
   async getUserById(id: string) {
-  return this.request(`/users/${id}`);
+    return this.request(`/users/${id}`);
   }
 
   async createUser(userData: any) {
-  return this.request('/users', {
+    return this.request('/users', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
   }
 
   async updateUser(id: string, userData: any) {
-  return this.request(`/users/${id}`, {
+    return this.request(`/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(userData),
     });
   }
 
   async deleteUser(id: string) {
-  return this.request(`/users/${id}`, {
+    return this.request(`/users/${id}`, {
       method: 'DELETE',
     });
   }
@@ -142,7 +154,7 @@ class ApiService {
   // Check if backend is reachable
   async healthCheck(): Promise<boolean> {
     try {
-  await this.request('/health');
+      await this.request('/health');
       return true;
     } catch {
       return false;

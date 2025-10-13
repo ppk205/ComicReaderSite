@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -90,6 +91,12 @@ export default function Login() {
             <p>Demo accounts:</p>
             <p>Admin: admin/admin123</p>
             <p>Moderator: mod/mod123</p>
+          </div>
+
+          <div className="text-center mt-4">
+            <a href="/register" className="text-indigo-600 hover:text-indigo-800 text-sm">
+              Don't have an account? Register
+            </a>
           </div>
         </form>
       </div>

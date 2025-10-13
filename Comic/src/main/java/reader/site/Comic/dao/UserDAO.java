@@ -11,41 +11,18 @@ import reader.site.Comic.entity.UserRoleEntity;
 import reader.site.Comic.model.User;
 import reader.site.Comic.model.UserRole;
 import reader.site.Comic.persistence.JPAUtil;
+import reader.site.Comic.util.PasswordUtil;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 public class UserDAO {
     private final RoleDAO roleDAO = new RoleDAO();
 
     public UserDAO() {
         seedDefaults();
-    }
-
-    private static final Pattern SHA256_PATTERN =
-            Pattern.compile("^[A-Fa-f0-9]{64}$"); // 64 ký tự hex
-
-    private static String trimOrNull(String s) {
-        return (s == null) ? null : s.trim();
-    }
-
-    private static String sha256(String input) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = md.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hashBytes) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public List<User> findAll(int page, int limit, String search, String roleName, String status) {
@@ -218,19 +195,21 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Apply all fields from source User to entity. Password will be hashed with bcrypt
+     * if it's not already a bcrypt hash.
+     */
     private void applyToEntity(EntityManager em, UserEntity entity, User source) {
         entity.setUsername(source.getUsername());
         entity.setEmail(source.getEmail());
 
-        // Hash mật khẩu bằng SHA-256 (chỉ hash nếu chưa hash)
-        String pw = trimOrNull(source.getPassword());
-        if (pw != null && !pw.isEmpty()) {
-            if (SHA256_PATTERN.matcher(pw).matches()) {
-                // đã hash -> giữ nguyên
+        if (source.getPassword() != null) {
+            String pw = source.getPassword();
+            // If already bcrypt hash, leave it. Otherwise hash it.
+            if (PasswordUtil.isBCryptHash(pw)) {
                 entity.setPassword(pw);
             } else {
-                // plaintext -> hash
-                entity.setPassword(sha256(pw));
+                entity.setPassword(PasswordUtil.hash(pw));
             }
         }
 
@@ -262,6 +241,10 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Apply only provided updates to existing entity. If password present and not empty,
+     * it will be hashed before being set (unless it's already a bcrypt hash).
+     */
     private void applyPartialUpdate(EntityManager em, UserEntity entity, User updates) {
         if (updates.getUsername() != null) {
             entity.setUsername(updates.getUsername());
@@ -270,7 +253,12 @@ public class UserDAO {
             entity.setEmail(updates.getEmail());
         }
         if (updates.getPassword() != null && !updates.getPassword().isBlank()) {
-            entity.setPassword(updates.getPassword());
+            String pw = updates.getPassword();
+            if (PasswordUtil.isBCryptHash(pw)) {
+                entity.setPassword(pw);
+            } else {
+                entity.setPassword(PasswordUtil.hash(pw));
+            }
         }
         if (updates.getStatus() != null) {
             entity.setStatus(updates.getStatus());
@@ -297,6 +285,7 @@ public class UserDAO {
         user.setId(entity.getId());
         user.setUsername(entity.getUsername());
         user.setEmail(entity.getEmail());
+        // keep the hashed password in model for server-side usage (transient in model ensures not serialized)
         user.setPassword(entity.getPassword());
         user.setStatus(entity.getStatus());
         user.setCreatedAt(formatInstant(entity.getCreatedAt()));
@@ -340,6 +329,7 @@ public class UserDAO {
         entity.setId(id);
         entity.setUsername(username);
         entity.setEmail(email);
+        // keep legacy seeded hashes as-is (they are not bcrypt). PasswordUtil.verify has a fallback.
         entity.setPassword(password);
         entity.setStatus("active");
         entity.setRole(roleDAO.findEntityById(em, roleId));
