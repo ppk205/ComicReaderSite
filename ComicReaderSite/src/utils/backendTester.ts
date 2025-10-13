@@ -45,7 +45,7 @@ export class BackendTester {
   async testMangaOperations() {
     try {
       // Test manga list
-      const mangaList = await apiService.getMangaList(1, 10);
+      const mangaList = await apiService.getMangaList();
       console.log('Manga list:', mangaList);
 
       // Test create manga (if user has permission)

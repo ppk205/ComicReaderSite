@@ -3,8 +3,17 @@
 import { useState, useMemo, useEffect } from "react";
 import MangaCard from "@/components/MangaCard";
 
+type MangaSummary = {
+  id: string;
+  title: string;
+  cover?: string;
+  coverUrl?: string;
+  picture?: string;
+  chapters?: string[];
+};
+
 export default function Home() {
-  const [featuredManga, setFeaturedManga] = useState([]);
+  const [featuredManga, setFeaturedManga] = useState<MangaSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,12 +31,20 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch("http://localhost:8080/api/manga", {
+        const res = await fetch(`${API_BASE}/manga`, {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Failed to fetch manga data");
-        const data = await res.json();
-        setFeaturedManga(data);
+        const data: unknown = await res.json();
+        if (Array.isArray(data)) {
+          setFeaturedManga(
+            data.filter((item): item is MangaSummary =>
+              typeof item?.id === "string" && typeof item?.title === "string"
+            )
+          );
+        } else {
+          setFeaturedManga([]);
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -38,15 +55,21 @@ export default function Home() {
   }, []);
 
   const filtered = useMemo(() => {
-    let data = [...featuredManga];
-    if (search) {
-      data = data.filter((m) =>
-        m.title.toLowerCase().includes(search.toLowerCase())
-      );
+    const lowerSearch = search.toLowerCase();
+    const base = search
+      ? featuredManga.filter((manga) =>
+          manga.title.toLowerCase().includes(lowerSearch)
+        )
+      : featuredManga;
+
+    const sorted = [...base];
+    if (sort === "az") {
+      sorted.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sort === "za") {
+      sorted.sort((a, b) => b.title.localeCompare(a.title));
     }
-    if (sort === "az") data.sort((a, b) => a.title.localeCompare(b.title));
-    if (sort === "za") data.sort((a, b) => b.title.localeCompare(a.title));
-    return data;
+
+    return sorted;
   }, [search, sort, featuredManga]);
 
   // ✅ pagination
