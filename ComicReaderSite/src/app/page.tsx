@@ -16,13 +16,13 @@ export default function Home() {
 
   // ✅ Base URL from env or fallback
   const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/api";
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/Comic/api";
 
   // ✅ Fetch manga from backend
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch("http://localhost:8080/api/manga", {
+        const res = await fetch("http://localhost:8080/Comic/api/manga", {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Failed to fetch manga data");
