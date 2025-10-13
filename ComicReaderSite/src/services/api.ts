@@ -36,19 +36,13 @@ class ApiService {
 
             if (!response.ok) {
                 // try to parse error body for better message
-                let errBody: { message?: string; error?: string } | null = null;
-                try {
-                    const text = await response.text();
-                    errBody = text ? JSON.parse(text) : null;
-                } catch {
-                    // ignore JSON parse errors, fall back to generic message
-                }
-                const msg = errBody?.message || errBody?.error || `HTTP error! status: ${response.status}`;
+                let errBody = null;
+                try { errBody = await response.json(); } catch {}
+                const msg = errBody && errBody.message ? errBody.message : `HTTP error! status: ${response.status}`;
                 throw new Error(msg);
             }
 
-            const text = await response.text();
-            return text ? (JSON.parse(text) as T) : (null as T);
+            return await response.json();
         } catch (error) {
             console.error(`API request failed for ${url}:`, error);
             throw error;
@@ -99,14 +93,14 @@ class ApiService {
         return this.request(`/manga/${id}`);
     }
 
-    async createManga(mangaData: Record<string, unknown>) {
+    async createManga(mangaData: any) {
         return this.request('/manga', {
             method: 'POST',
             body: JSON.stringify(mangaData),
         });
     }
 
-    async updateManga(id: string, mangaData: Record<string, unknown>) {
+    async updateManga(id: string, mangaData: any) {
         return this.request(`/manga/${id}`, {
             method: 'PUT',
             body: JSON.stringify(mangaData),
@@ -137,14 +131,14 @@ class ApiService {
         return this.request(`/users/${id}`);
     }
 
-    async createUser(userData: Record<string, unknown>) {
+    async createUser(userData: any) {
         return this.request('/users', {
             method: 'POST',
             body: JSON.stringify(userData),
         });
     }
 
-    async updateUser(id: string, userData: Record<string, unknown>) {
+    async updateUser(id: string, userData: any) {
         return this.request(`/users/${id}`, {
             method: 'PUT',
             body: JSON.stringify(userData),

@@ -304,10 +304,10 @@ public class UserDAO {
             }
 
             em.getTransaction().begin();
-            createDefaultUser(em, "admin-001", "admin", "admin@comicreader.com", "admin123", "role-admin");
-            createDefaultUser(em, "mod-001", "moderator", "mod@comicreader.com", "mod123", "role-moderator");
-            createDefaultUser(em, "editor-001", "editor", "editor@comicreader.com", "editor123", "role-editor");
-            createDefaultUser(em, "user-001", "reader", "reader@comicreader.com", "reader123", "role-user");
+            createDefaultUser(em, "admin-001", "admin", "admin@comicreader.com", "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", "role-admin");
+            createDefaultUser(em, "mod-001", "moderator", "mod@comicreader.com", "4c8425b174053ea6935b29c2b0e0aa4e2eab1a01b784e6ac91b8bdce9c26235a", "role-moderator");
+            createDefaultUser(em, "editor-001", "editor", "editor@comicreader.com", "ef5e5a1fb95055e0e56cccf98a41e784a132c14e7f6e1ba244302f0e72b29baf", "role-editor");
+            createDefaultUser(em, "user-001", "reader", "reader@comicreader.com", "128a1cb71e153e042708de7ea043d9a030fc1a83fa258788e7ef7aa23309eb72", "role-user");
             em.getTransaction().commit();
         } catch (Exception ex) {
             if (em.getTransaction().isActive()) {
@@ -330,12 +330,7 @@ public class UserDAO {
         entity.setUsername(username);
         entity.setEmail(email);
         // keep legacy seeded hashes as-is (they are not bcrypt). PasswordUtil.verify has a fallback.
-        if (password != null) {
-            String passwordToStore = PasswordUtil.isBCryptHash(password) ? password : PasswordUtil.hash(password);
-            entity.setPassword(passwordToStore);
-        } else {
-            entity.setPassword(null);
-        }
+        entity.setPassword(password);
         entity.setStatus("active");
         entity.setRole(roleDAO.findEntityById(em, roleId));
         entity.setCreatedAt(Instant.now().minusSeconds(86400L));

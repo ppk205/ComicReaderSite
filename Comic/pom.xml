@@ -46,6 +46,13 @@
             <version>6.4.4.Final</version>
         </dependency>
 
+        <!-- MySQL JDBC driver -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.3.0</version>
+        </dependency>
+
         <!-- Simple SLF4J backend for Hibernate logging -->
         <dependency>
             <groupId>org.slf4j</groupId>

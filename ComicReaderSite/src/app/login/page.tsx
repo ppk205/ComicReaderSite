@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function Login() {
     const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -18,9 +19,8 @@ export default function Login() {
 
         try {
             await login(credentials);
-            // Redirect to profile page after successful login
-            router.push('/profile');
-        } catch {
+            router.push('/dashboard');
+        } catch (err) {
             setError('Invalid username or password');
         } finally {
             setIsLoading(false);
@@ -32,10 +32,10 @@ export default function Login() {
             <div className="max-w-md w-full space-y-8">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Comic Reader
+                        Comic Reader Admin
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Sign in to your account
+                        Sign in to your admin account
                     </p>
                 </div>
                 <form className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow" onSubmit={handleSubmit}>
@@ -87,9 +87,15 @@ export default function Login() {
                         </button>
                     </div>
 
+                    <div className="text-sm text-gray-600">
+                        <p>Demo accounts:</p>
+                        <p>Admin: admin/admin123</p>
+                        <p>Moderator: mod/mod123</p>
+                    </div>
+
                     <div className="text-center mt-4">
                         <a href="/register" className="text-indigo-600 hover:text-indigo-800 text-sm">
-                            Don&apos;t have an account? Register
+                            Don't have an account? Register
                         </a>
                     </div>
                 </form>
