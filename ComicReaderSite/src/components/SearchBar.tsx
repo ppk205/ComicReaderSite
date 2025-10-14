@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiService } from '@/services/api';
 
 interface Manga {
   id: string;
@@ -19,11 +20,18 @@ export default function SearchBar() {
   useEffect(() => {
     const fetchMangaList = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/manga");
-        if (res.ok) {
-          const data = await res.json();
-          setMangaList(data);
+        const data = await apiService.getMangaList();
+        if (!Array.isArray(data)) {
+          setMangaList([]);
+          return;
         }
+
+        const normalised = data.map((item: any) => ({
+          id: String(item.id),
+          title: String(item.title ?? 'Untitled'),
+          cover: typeof item.cover === 'string' ? item.cover : undefined,
+        }));
+        setMangaList(normalised);
       } catch (err) {
         console.error("Failed to fetch manga list:", err);
       } finally {

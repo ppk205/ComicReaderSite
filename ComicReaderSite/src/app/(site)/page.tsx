@@ -2,6 +2,12 @@
 
 import { useState, useMemo, useEffect } from "react";
 import MangaCard from "@/components/MangaCard";
+import { apiService } from "@/services/api";
+
+type ChapterSummary = {
+  id: string;
+  title: string;
+};
 
 type MangaSummary = {
   id: string;
@@ -9,7 +15,7 @@ type MangaSummary = {
   cover?: string;
   coverUrl?: string;
   picture?: string;
-  chapters?: string[];
+  chapters?: ChapterSummary[];
 };
 
 export default function Home() {
@@ -23,35 +29,78 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const perPage = 12;
 
-  // ✅ Base URL from env or fallback
-  const API_BASE = 
-    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/api";
-
-  // ✅ Fetch manga from backend
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchData() {
+      setLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/manga`, {
-          cache: "no-store",
-        });
-        if (!res.ok) throw new Error("Failed to fetch manga data");
-        const data: unknown = await res.json();
-        if (Array.isArray(data)) {
-          setFeaturedManga(
-            data.filter((item): item is MangaSummary =>
-              typeof item?.id === "string" && typeof item?.title === "string"
-            )
+        const data = (await apiService.getMangaList()) as unknown;
+
+        if (cancelled) {
+          return;
+        }
+
+        const normaliseManga = (item: any): MangaSummary | null => {
+          if (!item || (typeof item.id !== "string" && typeof item.id !== "number") || typeof item.title !== "string") {
+            return null;
+          }
+
+          const chapters = Array.isArray(item.chapters)
+            ? item.chapters.map((chapter: any, index: number): ChapterSummary => {
+                if (typeof chapter === "string") {
+                  return { id: String(index + 1), title: chapter };
+                }
+
+                if (chapter && typeof chapter === "object") {
+                  const chapterId = "id" in chapter ? String(chapter.id ?? index + 1) : String(index + 1);
+                  const chapterTitle = "title" in chapter ? String(chapter.title ?? chapterId) : chapterId;
+                  return { id: chapterId, title: chapterTitle };
+                }
+
+                return { id: String(index + 1), title: String(chapter ?? index + 1) };
+              })
+            : undefined;
+
+          const coverCandidate = [item.cover, item.coverUrl, item.picture].find(
+            (value) => typeof value === "string" && value.length > 0
           );
+
+          return {
+            id: String(item.id),
+            title: item.title,
+            cover: coverCandidate,
+            coverUrl: typeof item.coverUrl === "string" ? item.coverUrl : undefined,
+            picture: typeof item.picture === "string" ? item.picture : undefined,
+            chapters,
+          };
+        };
+
+        if (Array.isArray(data)) {
+          const normalised = data
+            .map(normaliseManga)
+            .filter((item): item is MangaSummary => item !== null);
+          setFeaturedManga(normalised);
         } else {
           setFeaturedManga([]);
         }
+        setError(null);
       } catch (err: any) {
-        setError(err.message);
+        if (cancelled) {
+          return;
+        }
+        setError(err?.message ?? "Unable to load manga data");
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
     fetchData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filtered = useMemo(() => {

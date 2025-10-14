@@ -1,6 +1,8 @@
 'use client';
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { apiService } from "@/services/api";
 
 export default function ChapterReaderPage({ params }: { params: { seriesId: string, chapterId: string } }) {
     const uniqueKey = `${params.seriesId}-${params.chapterId}`;
@@ -14,54 +16,90 @@ function ChapterReader({ params }: { params: { seriesId: string; chapterId: stri
     const [error, setError] = useState<string | null>(null);
     const [chapterSearch, setChapterSearch] = useState("");
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/api";
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
     // 👉 Fetch chapter images
     useEffect(() => {
+        let cancelled = false;
+
         async function fetchChapterImages() {
             try {
                 setLoading(true);
-                const res = await fetch(
-                    `${API_BASE}/chapter-images?mangaId=${params.seriesId}&chapterId=${params.chapterId}`
-                );
-                if (!res.ok) throw new Error("Failed to fetch chapter images");
-                const data = await res.json();
-                setImages(data.sort((a: any, b: any) => a.order - b.order));
+                const data = await apiService.getChapterImages(params.seriesId, params.chapterId);
+                if (cancelled) {
+                    return;
+                }
+                const sorted = Array.isArray(data)
+                    ? data
+                        .map((entry: any) => ({
+                            url: String(entry.url ?? entry.imageUrl ?? ''),
+                            order: Number(entry.order ?? entry.position ?? 0),
+                        }))
+                        .filter((entry) => entry.url.length > 0)
+                        .sort((a, b) => a.order - b.order)
+                    : [];
+                setImages(sorted);
             } catch (err: any) {
-                setError(err.message);
+                if (!cancelled) {
+                    setError(err?.message ?? "Failed to fetch chapter images");
+                }
             } finally {
-                setLoading(false);
+                if (!cancelled) {
+                    setLoading(false);
+                }
             }
         }
         fetchChapterImages();
+
+        return () => {
+            cancelled = true;
+        };
     }, [params.seriesId, params.chapterId]);
 
     // 👉 Fetch chapter list
     useEffect(() => {
+        let cancelled = false;
+
         async function fetchMangaInfo() {
             try {
-                const res = await fetch(`${API_BASE}/manga/${params.seriesId}`);
-                if (!res.ok) throw new Error("Failed to fetch manga info");
-                const data = await res.json();
-                if (Array.isArray(data.chapters)) {
-                    const mapped = data.chapters.map((name: string, index: number) => ({
-                        id: String(index + 1),
-                        title: name,
-                    }));
+                const data = await apiService.getMangaById(params.seriesId);
+                if (cancelled) {
+                    return;
+                }
+
+                if (Array.isArray((data as any)?.chapters)) {
+                    const mapped = (data as any).chapters.map((chapter: any, index: number) => {
+                        if (typeof chapter === "string") {
+                            return { id: String(index + 1), title: chapter };
+                        }
+
+                        if (chapter && typeof chapter === "object") {
+                            const chapterId = "id" in chapter ? String(chapter.id ?? index + 1) : String(index + 1);
+                            const chapterTitle = "title" in chapter ? String(chapter.title ?? chapterId) : chapterId;
+                            return { id: chapterId, title: chapterTitle };
+                        }
+
+                        return { id: String(index + 1), title: String(chapter ?? index + 1) };
+                    });
                     setChapters(mapped);
+                } else {
+                    setChapters([]);
                 }
             } catch (err) {
                 console.error("Error fetching manga info:", err);
             }
         }
         fetchMangaInfo();
+        return () => {
+            cancelled = true;
+        };
     }, [params.seriesId]);
 
     // 👉 Sidebar toggle
-    const [collapsed, setCollapsed] = useState(searchParams?.get("sidebar") === "hidden" ?? false);
+    const initialCollapsed = searchParams?.get("sidebar") === "hidden";
+    const [collapsed, setCollapsed] = useState<boolean>(initialCollapsed);
     const setCollapsedAndUpdateUrl = (next: boolean) => {
         setCollapsed(next);
         const sp = new URLSearchParams(searchParams?.toString() ?? "");
@@ -91,19 +129,19 @@ function ChapterReader({ params }: { params: { seriesId: string; chapterId: stri
             {/* 🔹 Top Navigation Bar */}
             <div className="fixed top-0 left-0 right-0 z-40 flex justify-between items-center bg-gray-800 border-b border-gray-700 px-6 py-3">
                 <div className="flex gap-3">
+                    <Link
+                        href={`/series/${params.seriesId}`}
+                        className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
+                        title="Back to series"
+                    >
+                        Series
+                    </Link>
                     <button
                         onClick={() => router.push('/')}
                         className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
                         title="Back to Home"
                     >
                         Home
-                    </button>
-                    <button
-                        onClick={() => router.push(`/series/${params.seriesId}`)}
-                        className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
-                        title="Back to Series"
-                    >
-                        Back
                     </button>
                     <button
                         onClick={() => navigateToChapter(chapters[getCurrentIndex() - 1]?.id)}

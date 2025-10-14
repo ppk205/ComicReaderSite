@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { apiService } from "@/services/api";
 
 type Manga = {
-  id: number;
+  id: string;
   title: string;
   cover?: string;
   chapters?: string[]; // Mảng chapter đã parse
@@ -19,40 +20,48 @@ export default function SeriesDetailPage({ params }: { params: { seriesId: strin
     let active = true;
     setLoading(true);
 
-    fetch(`http://localhost:8080/api/manga/${params.seriesId}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+    const fetchManga = async () => {
+      try {
+        const data = await apiService.getMangaById(params.seriesId);
 
-        // ⚙️ Xử lý chuỗi chapters từ DB
+        if (!active) {
+          return;
+        }
+
         let chapters: string[] = [];
-        if (typeof data.chapters === "string") {
+        if (typeof (data as any)?.chapters === "string") {
           try {
-            chapters = JSON.parse(data.chapters);
+            chapters = JSON.parse((data as any).chapters);
           } catch {
-            // Nếu không parse được => tách bằng dấu phẩy hoặc để trống
-            chapters = data.chapters.split(",").map((s: string) => s.trim());
+            chapters = ((data as any).chapters as string)
+              .split(",")
+              .map((s: string) => s.trim())
+              .filter(Boolean);
           }
-        } else if (Array.isArray(data.chapters)) {
-          chapters = data.chapters;
+        } else if (Array.isArray((data as any)?.chapters)) {
+          chapters = (data as any).chapters as string[];
         }
 
-        if (active) {
-          setManga({
-            id: data.id,
-            title: data.title,
-            cover: data.cover,
-            chapters: chapters,
-          });
+        setManga({
+          id: String((data as any).id ?? params.seriesId),
+          title: String((data as any).title ?? "Untitled"),
+          cover: typeof (data as any).cover === "string" ? (data as any).cover : undefined,
+          chapters,
+        });
+      } catch (err) {
+        if (!active) {
+          return;
         }
-      })
-      .catch((err) => {
         console.error("❌ Failed to load manga:", err);
         setManga(null);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchManga();
 
     return () => {
       active = false;
