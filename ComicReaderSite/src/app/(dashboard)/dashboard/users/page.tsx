@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { User, CreateUserRequest, UpdateUserRequest } from '../../../types/auth';
-import { hasPermission, isAdmin } from '../../../types/auth';
-import { apiService } from '../../../services/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { User, CreateUserRequest, UpdateUserRequest } from '@/types/auth';
+import { hasPermission, isAdmin } from '@/types/auth';
+import { apiService } from '@/services/api';
 import { useRouter } from 'next/navigation';
-import { BackButton } from '../../../components/BackButton';
+import { BackButton } from '@/components/BackButton';
 
 interface UserFilter {
   page: number;

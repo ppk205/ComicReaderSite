@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { isAdmin } from '../../../types/auth';
-import { apiService } from '../../../services/api';
-import { backendTester } from '../../../utils/backendTester';
+import { useAuth } from '@/contexts/AuthContext';
+import { isAdmin } from '@/types/auth';
+import { apiService } from '@/services/api';
+import { backendTester } from '@/utils/backendTester';
 import { useRouter } from 'next/navigation';
-import { BackButton } from '../../../components/BackButton';
+import { BackButton } from '@/components/BackButton';
 
 interface SystemSettings {
   siteName: string;

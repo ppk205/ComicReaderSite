@@ -6,7 +6,7 @@ import { AppHeader } from "@/components/AppHeader";
 
 export function AppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const hideChrome = pathname.startsWith("/dashboard");
+  const hideChrome = pathname.startsWith("/dashboard") || pathname.startsWith("/series");
 
   return (
     <>

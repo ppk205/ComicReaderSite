@@ -19,7 +19,7 @@ export default function SeriesDetailPage({ params }: { params: { seriesId: strin
     let active = true;
     setLoading(true);
 
-    fetch(`http://localhost:8080/Comic/api/manga/${params.seriesId}`)
+    fetch(`http://localhost:8080/api/manga/${params.seriesId}`)
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();

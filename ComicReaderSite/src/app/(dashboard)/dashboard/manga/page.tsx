@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { hasPermission } from '../../../types/auth';
-import { apiService } from '../../../services/api';
-import { BackButton } from '../../../components/BackButton';
+import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission } from '@/types/auth';
+import { apiService } from '@/services/api';
+import { BackButton } from '@/components/BackButton';
 
 type DashboardManga = {
   id: string;

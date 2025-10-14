@@ -14,7 +14,7 @@ function ChapterReader({ params }: { params: { seriesId: string; chapterId: stri
     const [error, setError] = useState<string | null>(null);
     const [chapterSearch, setChapterSearch] = useState("");
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/Comic/api";
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/api";
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();

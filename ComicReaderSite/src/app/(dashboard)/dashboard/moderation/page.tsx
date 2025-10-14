@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
-import { hasPermission, isModerator, isAdmin } from '../../../types/auth';
-import { apiService } from '../../../services/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission, isModerator, isAdmin } from '@/types/auth';
+import { apiService } from '@/services/api';
 import { useRouter } from 'next/navigation';
-import { BackButton } from '../../../components/BackButton';
+import { BackButton } from '@/components/BackButton';
 
 interface ContentReport {
   id: string;

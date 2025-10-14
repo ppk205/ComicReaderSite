@@ -1,21 +1,14 @@
 'use client';
 
-import { useAuth } from '../../../contexts/AuthContext';
-import { hasPermission, isAdmin, isModerator } from '../../../types/auth';
-import { DashboardStats } from '../../../types/dashboard';
 import { useEffect, useMemo, useState } from 'react';
-<<<<<<< HEAD:ComicReaderSite/src/app/(dashboard)/dashboard/page.tsx
-import { apiService } from '../../../services/api';
-import { BackendSetupGuide } from '../../../components/BackendSetupGuide';
-import { StatCard } from '../../../components/dashboard/StatCard';
-import { ActionTile } from '../../../components/dashboard/ActionTile';
-=======
 import { useRouter } from 'next/navigation';
-import { apiService } from '../../services/api';
-import { BackendSetupGuide } from '../../components/BackendSetupGuide';
-import { StatCard } from '../../components/dashboard/StatCard';
-import { ActionTile } from '../../components/dashboard/ActionTile';
->>>>>>> origin/dashboard-ppk:ComicReaderSite/src/app/dashboard/page.tsx
+import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission, isAdmin, isModerator } from '@/types/auth';
+import { DashboardStats } from '@/types/dashboard';
+import { apiService } from '@/services/api';
+import { BackendSetupGuide } from '@/components/BackendSetupGuide';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { ActionTile } from '@/components/dashboard/ActionTile';
 
 interface ActivityItem {
   id: string;

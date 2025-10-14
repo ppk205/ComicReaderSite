@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../../../../contexts/AuthContext';
-import { hasPermission, isAdmin, isModerator } from '../../../../types/auth';
-import { apiService } from '../../../../services/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { hasPermission, isAdmin, isModerator } from '@/types/auth';
+import { apiService } from '@/services/api';
 import Link from 'next/link';
 
 interface ModerationReport {
