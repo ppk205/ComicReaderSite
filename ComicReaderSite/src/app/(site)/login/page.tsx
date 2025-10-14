@@ -19,7 +19,7 @@ export default function Login() {
 
         try {
             await login(credentials);
-            router.push('/dashboard');
+            router.push('/');
         } catch (err) {
             setError('Invalid username or password');
         } finally {

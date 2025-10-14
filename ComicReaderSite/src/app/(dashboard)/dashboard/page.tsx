@@ -4,10 +4,18 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { hasPermission, isAdmin, isModerator } from '../../../types/auth';
 import { DashboardStats } from '../../../types/dashboard';
 import { useEffect, useMemo, useState } from 'react';
+<<<<<<< HEAD:ComicReaderSite/src/app/(dashboard)/dashboard/page.tsx
 import { apiService } from '../../../services/api';
 import { BackendSetupGuide } from '../../../components/BackendSetupGuide';
 import { StatCard } from '../../../components/dashboard/StatCard';
 import { ActionTile } from '../../../components/dashboard/ActionTile';
+=======
+import { useRouter } from 'next/navigation';
+import { apiService } from '../../services/api';
+import { BackendSetupGuide } from '../../components/BackendSetupGuide';
+import { StatCard } from '../../components/dashboard/StatCard';
+import { ActionTile } from '../../components/dashboard/ActionTile';
+>>>>>>> origin/dashboard-ppk:ComicReaderSite/src/app/dashboard/page.tsx
 
 interface ActivityItem {
   id: string;
@@ -18,6 +26,7 @@ interface ActivityItem {
 
 export default function Dashboard() {
   const { state, logout } = useAuth();
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     activeUsers: 0,
@@ -180,12 +189,6 @@ export default function Dashboard() {
         tone: 'indigo',
       },
       {
-        title: 'Roles & Permissions',
-        description: 'Adjust RBAC policies for each team role.',
-        href: '/dashboard/roles',
-        tone: 'fuchsia',
-      },
-      {
         title: 'System Settings',
         description: 'Configure platform behaviour, integrations, and alerts.',
         href: '/dashboard/settings',
@@ -275,7 +278,16 @@ export default function Dashboard() {
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <button
-                onClick={logout}
+                onClick={() => router.push('/')}
+                className="inline-flex items-center justify-center rounded-lg border border-purple-500/40 bg-purple-500/10 px-4 py-2 text-sm font-medium text-purple-200 transition hover:border-purple-400 hover:bg-purple-500/20"
+              >
+                Back to Home
+              </button>
+              <button
+                onClick={async () => {
+                  await logout();
+                  router.push('/');
+                }}
                 className="inline-flex items-center justify-center rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-200 transition hover:border-red-400 hover:bg-red-500/20"
               >
                 Logout

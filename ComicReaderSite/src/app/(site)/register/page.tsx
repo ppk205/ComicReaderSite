@@ -5,8 +5,15 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import apiService from '../../../services/api'; // adjust path if your api.ts is located elsewhere
 
+type RoleOption = 'reader' | 'editor';
+
 export default function Register() {
-  const [payload, setPayload] = useState({ username: '', email: '', password: '' });
+  const [payload, setPayload] = useState<{ username: string; email: string; password: string; role: RoleOption }>({
+    username: '',
+    email: '',
+    password: '',
+    role: 'reader',
+  });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -19,11 +26,11 @@ export default function Register() {
 
     try {
       // Use the apiService.register method (same style as login)
-      await apiService.register(payload.username, payload.email, payload.password);
+  await apiService.register(payload.username, payload.email, payload.password, payload.role);
 
       // After successful registration, reuse the existing client login flow
       await login({ username: payload.username, password: payload.password });
-      router.push('/dashboard');
+      router.push('/login');
     } catch (err: any) {
       setError(err?.message || 'Registration failed');
     } finally {
@@ -96,7 +103,6 @@ export default function Register() {
               onChange={(e) => setPayload({ ...payload, password: e.target.value })}
             />
           </div>
-
           <div>
             <button
               type="submit"
