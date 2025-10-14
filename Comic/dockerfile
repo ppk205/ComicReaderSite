@@ -21,4 +21,5 @@ RUN rm -rf webapps/*
 COPY --from=build /app/target/*.war webapps/ROOT.war
 
 EXPOSE 8080
+
 CMD ["catalina.sh", "run"]
