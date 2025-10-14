@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../../contexts/AuthContext';
-import apiService from '../../../services/api'; // adjust path if your api.ts is located elsewhere
+import { useAuth } from '@/contexts/AuthContext';
+import apiService from '@/services/api'; // adjust path if your api.ts is located elsewhere
 
 type RoleOption = 'reader' | 'editor';
 
