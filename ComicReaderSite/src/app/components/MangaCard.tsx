@@ -1,5 +1,18 @@
-// src/components/MangaCard.tsx
-export default function MangaCard({ manga, featured = false }) {
+// src/app/components/MangaCard.tsx
+import React from "react";
+
+type Manga = {
+  cover: string;
+  title: string;
+  chapters: string[]; // hoặc đổi sang { id: string|number; name: string }[]
+};
+
+type MangaCardProps = {
+  manga: Manga;
+  featured?: boolean;
+};
+
+export default function MangaCard({ manga, featured = false }: MangaCardProps) {
   return (
     <div className={`p-4 rounded-xl shadow-md ${featured ? "bg-purple-900" : "bg-gray-800"}`}>
       <img
@@ -9,7 +22,7 @@ export default function MangaCard({ manga, featured = false }) {
       />
       <h3 className="text-lg font-bold text-white mt-2">{manga.title}</h3>
       <ul className="text-sm text-gray-300">
-        {manga.chapters.slice(0, 3).map((ch, i) => (
+        {manga.chapters.slice(0, 3).map((ch: string, i: number) => (
           <li key={i}>{ch}</li>
         ))}
       </ul>
