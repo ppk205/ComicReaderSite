@@ -1,33 +1,14 @@
 // API Service for communicating with Tomcat backend
-const DEFAULT_API_BASE_CANDIDATES = [
-    process.env.NEXT_PUBLIC_API_BASE,
-    'http://localhost:8080/api'
-]
-    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-    .map((value) => value.replace(/\/$/, ''));
+const DEFAULT_API_BASE_URL = 'http://localhost:8080/Comic/api';
 
-const uniqueCandidates = Array.from(new Set(DEFAULT_API_BASE_CANDIDATES));
-
-let candidateBaseUrls = uniqueCandidates.length > 0
-    ? [...uniqueCandidates]
-    : ['http://localhost:8080/api'];
-
-if (typeof window !== 'undefined') {
-    const { protocol, hostname } = window.location;
-    const origins = [ `${protocol}//${hostname}:8080/api` ];
-
-    candidateBaseUrls.push(...origins);
-}
-
-const CANDIDATE_BASE_URLS = Array.from(new Set(candidateBaseUrls));
+const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, '') || DEFAULT_API_BASE_URL;
 
 class ApiService {
-    private candidateBaseUrls: string[];
-    private resolvedBaseUrl: string | null = null;
-    private resolvingPromise: Promise<string> | null = null;
+    private baseUrl: string;
 
-    constructor(baseUrls: string[] = CANDIDATE_BASE_URLS) {
-        this.candidateBaseUrls = baseUrls;
+    constructor(baseUrl: string = API_BASE_URL) {
+        this.baseUrl = baseUrl;
     }
 
     // Helper method to get auth headers
@@ -40,45 +21,9 @@ class ApiService {
     }
 
     // Generic fetch method
-    private async resolveBaseUrl(): Promise<string> {
-        if (this.resolvedBaseUrl) {
-            return this.resolvedBaseUrl;
-        }
-
-        if (this.resolvingPromise) {
-            return this.resolvingPromise;
-        }
-
-        this.resolvingPromise = (async () => {
-            console.debug('[ApiService] Resolving backend base URL from candidates:', this.candidateBaseUrls);
-            for (const baseUrlCandidate of this.candidateBaseUrls) {
-                try {
-                    const response = await fetch(`${baseUrlCandidate}/health`, { method: 'GET', mode: 'cors' });
-                    if (response.ok) {
-                        this.resolvedBaseUrl = baseUrlCandidate;
-                        console.info(`[ApiService] Using backend base URL: ${baseUrlCandidate}`);
-                        return baseUrlCandidate;
-                    }
-                } catch (error) {
-                    console.warn(`API base URL candidate failed (${baseUrlCandidate}/health):`, error);
-                }
-            }
-
-            const fallback = this.candidateBaseUrls[0];
-            this.resolvedBaseUrl = fallback;
-            console.warn(`[ApiService] Falling back to first candidate base URL: ${fallback}`);
-            return fallback;
-        })().finally(() => {
-            this.resolvingPromise = null;
-        });
-
-        return this.resolvingPromise as Promise<string>;
-    }
-
     private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
         const normalisedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-        const baseUrl = await this.resolveBaseUrl();
-        const url = `${baseUrl}${normalisedEndpoint}`;
+        const url = `${this.baseUrl}${normalisedEndpoint}`;
 
         const authHeaders = this.getAuthHeaders();
         const mergedHeaders: Record<string, string> = { ...authHeaders };
@@ -101,13 +46,11 @@ class ApiService {
         }
 
         try {
-            console.debug('[ApiService] request', { url, options });
             const response = await fetch(url, {
                 ...options,
                 headers: {
                     ...mergedHeaders,
                 },
-                mode: 'cors',
             });
 
             if (!response.ok) {
@@ -133,21 +76,32 @@ class ApiService {
             return text as unknown as T;
         } catch (error) {
             console.error(`API request failed for ${url}:`, error);
-            if (error instanceof TypeError) {
-                const hint = 'The browser blocked this request. Double-check that the backend is running and that the URL includes the correct Tomcat context path (for example http://localhost:8080/ComicDashboard-1.0-SNAPSHOT/api).';
-                throw new Error(`${error.message} - ${hint}`);
-            }
             throw error;
         }
     }
 
     // Authentication endpoints
-    async login(username: string, password: string) {
+    // login supports being called either:
+    //  - login(identifier, password)
+    //  - login({ email | username, password })
+    // It will always send a payload that has an "email" property (the server expects that field name).
+    async login(identifierOrObj: any, password?: string) {
+        let identifier: string | undefined;
+
+        if (typeof identifierOrObj === 'object' && identifierOrObj !== null) {
+            identifier = identifierOrObj.email ?? identifierOrObj.username;
+            password = identifierOrObj.password;
+        } else {
+            identifier = identifierOrObj;
+        }
+
+        // always send as "email" so backend's LoginRequest.email is populated
         return this.request('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ email: identifier, password }),
         });
     }
+
 
     async logout() {
         return this.request('/auth/logout', {
@@ -160,10 +114,10 @@ class ApiService {
     }
 
     // Register endpoint (matches /api/auth/register on backend)
-    async register(username: string, email: string, password: string, role: 'reader' | 'editor' = 'reader') {
+    async register(username: string, email: string, password: string) {
         return this.request('/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ username, email, password, role }),
+            body: JSON.stringify({ username, email, password}),
         });
     }
 
@@ -188,35 +142,6 @@ class ApiService {
     async getChapterImages(mangaId: string, chapterId: string) {
         const query = new URLSearchParams({ mangaId, chapterId });
         return this.request(`/chapter-images?${query.toString()}`);
-    }
-
-    async getMangaChapters(mangaId: string) {
-        const query = new URLSearchParams({ mangaId });
-        return this.request(`/manga-chapters?${query.toString()}`);
-    }
-
-    async getMangaChapterById(id: string) {
-        return this.request(`/manga-chapters/${id}`);
-    }
-
-    async createMangaChapter(chapterData: any) {
-        return this.request('/manga-chapters', {
-            method: 'POST',
-            body: JSON.stringify(chapterData),
-        });
-    }
-
-    async updateMangaChapter(id: string, chapterData: any) {
-        return this.request(`/manga-chapters/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(chapterData),
-        });
-    }
-
-    async deleteMangaChapter(id: string) {
-        return this.request(`/manga-chapters/${id}`, {
-            method: 'DELETE',
-        });
     }
 
     async createManga(mangaData: any) {
@@ -275,62 +200,6 @@ class ApiService {
         return this.request(`/users/${id}`, {
             method: 'DELETE',
         });
-    }
-
-    // Profile endpoints
-    async getProfile(userId: string) {
-        return this.request(`/users/${userId}`);  // Dùng /users thay vì /profile
-    }
-
-    async updateProfile(userId: string, profileData: any) {
-        return this.request(`/users/${userId}`, {  // Dùng /users thay vì /profile
-            method: 'PUT',
-            body: JSON.stringify(profileData),
-        });
-    }
-
-    // Reading History endpoints
-    async getReadingHistory(userId: string) {
-        return this.request(`/reading-history?userId=${userId}`);
-    }
-
-    async saveReadingProgress(mangaId: string, chapterId: string, currentPage: number, completed?: boolean) {
-        return this.request('/reading-history', {
-            method: 'POST',
-            body: JSON.stringify({
-                mangaId,
-                chapterId,
-                currentPage,
-                completed: completed || false,
-            }),
-        });
-    }
-
-    async deleteReadingHistory(historyId: string) {
-        return this.request(`/reading-history/${historyId}`, {
-            method: 'DELETE',
-        });
-    }
-
-    // User Follow endpoints
-    async followUser(userId: string) {
-        return this.request(`/follow/${userId}`, {
-            method: 'POST',
-        });
-    }
-
-    async unfollowUser(userId: string) {
-        return this.request(`/follow/${userId}`, {
-            method: 'DELETE',
-        });
-    }
-
-    async getFollowers(userId: string) {
-        return this.request(`/follow/followers?userId=${userId}`);
-    }
-
-    async getFollowing(userId: string) {
-        return this.request(`/follow/following?userId=${userId}`);
     }
 
     // Check if backend is reachable

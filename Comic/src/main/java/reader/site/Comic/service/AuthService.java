@@ -21,17 +21,28 @@ public class AuthService {
         this.tokenService = tokenService;
     }
 
-    public User authenticate(String username, String password) {
-        Optional<User> userOpt = userDAO.findByUsername(username);
-        if (userOpt.isEmpty()) {
+    public User authenticate(String identifier, String password) {
+        if (identifier == null) {
             return null;
         }
+
+        // Try username first
+        Optional<User> userOpt = userDAO.findByUsername(identifier);
+        if (userOpt.isEmpty()) {
+            // Fall back to email
+            userOpt = userDAO.findByEmail(identifier);
+            if (userOpt.isEmpty()) {
+                return null;
+            }
+        }
+
         User user = userOpt.get();
         String stored = user.getPassword();
-        // Use bcrypt verification if stored password is a bcrypt hash.
+        // Use bcrypt verification or legacy fallback inside PasswordUtil.verify
         if (stored == null || !PasswordUtil.verify(password, stored)) {
             return null;
         }
+
         user.setLastLogin(Instant.now().truncatedTo(ChronoUnit.SECONDS).toString());
 
         User updates = new User();
