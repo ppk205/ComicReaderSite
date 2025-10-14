@@ -10,6 +10,8 @@ public class User {
     private String createdAt;
     private String updatedAt;
     private String lastLogin;
+    private String avatar;
+    private String bio;
 
     public User() {}
 
@@ -21,7 +23,9 @@ public class User {
                 String status,
                 String createdAt,
                 String updatedAt,
-                String lastLogin) {
+                String lastLogin,
+                String avatar,
+                String bio) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -31,6 +35,8 @@ public class User {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.lastLogin = lastLogin;
+        this.avatar = avatar;
+        this.bio = bio;
     }
 
     public String getId() {
@@ -103,5 +109,21 @@ public class User {
 
     public void setLastLogin(String lastLogin) {
         this.lastLogin = lastLogin;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 }

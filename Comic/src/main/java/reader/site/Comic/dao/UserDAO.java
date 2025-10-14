@@ -1,5 +1,10 @@
 package reader.site.Comic.dao;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -9,14 +14,8 @@ import jakarta.persistence.criteria.Root;
 import reader.site.Comic.entity.UserEntity;
 import reader.site.Comic.entity.UserRoleEntity;
 import reader.site.Comic.model.User;
-import reader.site.Comic.model.UserRole;
 import reader.site.Comic.persistence.JPAUtil;
 import reader.site.Comic.util.PasswordUtil;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 public class UserDAO {
     private final RoleDAO roleDAO = new RoleDAO();
@@ -266,6 +265,12 @@ public class UserDAO {
         if (updates.getLastLogin() != null) {
             entity.setLastLogin(parseInstant(updates.getLastLogin()));
         }
+        if (updates.getAvatar() != null) {
+            entity.setAvatar(updates.getAvatar());
+        }
+        if (updates.getBio() != null) {
+            entity.setBio(updates.getBio());
+        }
         if (updates.getRole() != null) {
             UserRoleEntity role = null;
             if (updates.getRole().getId() != null) {
@@ -291,6 +296,8 @@ public class UserDAO {
         user.setCreatedAt(formatInstant(entity.getCreatedAt()));
         user.setUpdatedAt(formatInstant(entity.getUpdatedAt()));
         user.setLastLogin(formatInstant(entity.getLastLogin()));
+        user.setAvatar(entity.getAvatar());
+        user.setBio(entity.getBio());
         user.setRole(roleDAO.toModel(entity.getRole()));
         return user;
     }

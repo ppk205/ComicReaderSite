@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #back-end-java - tomcat10 - jdk17
 FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
@@ -22,29 +21,5 @@ RUN rm -rf webapps/*
 COPY --from=build /app/target/*.war webapps/ROOT.war
 
 EXPOSE 8080
-=======
-#back-end-java - tomcat10 - jdk17
-FROM maven:3.9.9-eclipse-temurin-17 AS build
-WORKDIR /app
 
-# Copy pom.xml trước để cache dependency
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# Copy source và build WAR
-COPY src ./src
-RUN rm -rf target && mvn clean package -U -DskipTests
-
-#Stage 2: Build
-FROM tomcat:10.1-jdk17-temurin
-
-WORKDIR /usr/local/tomcat
-
-RUN sed -i 's/port="8005"/port="-1"/' conf/server.xml
-RUN rm -rf webapps/*
-
-COPY --from=build /app/target/*.war webapps/ROOT.war
-
-EXPOSE 8080
->>>>>>> 8056ef92f9ca6650cbc5711d7c4ba2540a5acd06
 CMD ["catalina.sh", "run"]

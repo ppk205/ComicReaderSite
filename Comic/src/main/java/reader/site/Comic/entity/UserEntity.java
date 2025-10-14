@@ -1,5 +1,8 @@
 package reader.site.Comic.entity;
 
+import java.time.Instant;
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,9 +12,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -44,6 +44,12 @@ public class UserEntity {
 
     @Column(name = "last_login")
     private Instant lastLogin;
+
+    @Column(name = "avatar", length = 500)
+    private String avatar;
+
+    @Column(name = "bio", columnDefinition = "TEXT")
+    private String bio;
 
     @PrePersist
     public void onCreate() {
@@ -132,5 +138,21 @@ public class UserEntity {
 
     public void setLastLogin(Instant lastLogin) {
         this.lastLogin = lastLogin;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 }
