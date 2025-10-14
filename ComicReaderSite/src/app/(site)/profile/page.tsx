@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiService } from '@/services/api';
+import { Manga } from '@/types/manga';
 
 interface UserProfile {
     id: string;
@@ -27,20 +28,9 @@ interface UserProfile {
     bio?: string;
 }
 
-interface ReadingHistoryItem {
-    id: string;
-    mangaId: string;
-    mangaTitle: string;
-    mangaCover?: string;
-    chapterId: string;
-    currentPage: number;
-    lastReadAt: string;
-    completed: boolean;
-}
-
 export default function ProfilePage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [readingHistory, setReadingHistory] = useState<ReadingHistoryItem[]>([]);
+    const [recentManga, setRecentManga] = useState<Manga[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -79,13 +69,31 @@ export default function ProfilePage() {
                 bio: currentUser.bio,
             });
 
-            // Fetch reading history
+            // Fetch recent manga (4 newest)
             try {
-                const history = await apiService.getReadingHistory(currentUser.id);
-                setReadingHistory(Array.isArray(history) ? history : []);
-            } catch (historyError) {
-                console.warn('Failed to load reading history:', historyError);
-                setReadingHistory([]);
+                const response = await apiService.getMangaList();
+                const allManga: any[] = Array.isArray(response) ? response : [];
+                console.log('📚 All manga from API:', allManga);
+                console.log('📚 First manga:', allManga?.[0]);
+                
+                // Map backend 'cover' field to frontend 'coverImage'
+                const mappedManga = Array.isArray(allManga) 
+                    ? allManga.map(manga => ({
+                        ...manga,
+                        coverImage: manga.cover || manga.coverImage,
+                        createdAt: manga.createdAt || new Date().toISOString()
+                    }))
+                    : [];
+                
+                const sortedManga = mappedManga
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .slice(0, 4);
+                    
+                console.log('✅ Recent 4 manga:', sortedManga);
+                setRecentManga(sortedManga);
+            } catch (mangaError) {
+                console.warn('Failed to load recent manga:', mangaError);
+                setRecentManga([]);
             }
 
         } catch (error: any) {
@@ -101,6 +109,29 @@ export default function ProfilePage() {
 
     useEffect(() => {
         fetchProfile();
+    }, [fetchProfile]);
+
+    // 👉 Auto-refresh when user comes back to this page
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                console.log('👁️ Page visible again, refreshing profile...');
+                fetchProfile();
+            }
+        };
+
+        const handleFocus = () => {
+            console.log('🔄 Window focused, refreshing profile...');
+            fetchProfile();
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('focus', handleFocus);
+        };
     }, [fetchProfile]);
 
     const handleUpdateProfile = async () => {
@@ -138,18 +169,6 @@ export default function ProfilePage() {
             console.error('Logout error:', error);
             localStorage.removeItem('authToken');
             router.push('/login');
-        }
-    };
-
-    const handleDeleteHistory = async (historyId: string) => {
-        if (!confirm('Are you sure you want to delete this reading history?')) return;
-
-        try {
-            await apiService.deleteReadingHistory(historyId);
-            setReadingHistory(readingHistory.filter(item => item.id !== historyId));
-        } catch (error) {
-            console.error('Delete history error:', error);
-            alert('Failed to delete history');
         }
     };
 
@@ -212,6 +231,15 @@ export default function ProfilePage() {
                 <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
                     {/* Profile Header */}
                     <div className="relative h-32 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">
+                        {/* Role Badge - Top Left */}
+                        {profile?.role && (
+                            <div className="absolute top-4 left-4">
+                                <span className="inline-flex items-center px-3 py-1 bg-purple-600/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full border border-white/20">
+                                    {profile.role.name}
+                                </span>
+                            </div>
+                        )}
+                        
                         <div className="absolute top-4 right-4 flex gap-3">
                             <button
                                 onClick={() => router.push('/')}
@@ -220,6 +248,15 @@ export default function ProfilePage() {
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                </svg>
+                            </button>
+                            <button
+                                onClick={fetchProfile}
+                                className="p-2.5 bg-gray-900/50 hover:bg-gray-900/70 backdrop-blur-sm text-white rounded-lg transition-colors border border-white/20"
+                                title="Refresh Profile"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                             </button>
                             <button
@@ -280,18 +317,10 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            <div className="flex gap-8 mt-6">
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold text-white">{profile?.seriesCount || 0}</div>
-                                    <div className="text-sm text-gray-400">Series</div>
-                                </div>
+                            <div className="flex gap-8 mt-6 justify-center">
                                 <div className="text-center">
                                     <div className="text-2xl font-bold text-white">{profile?.followersCount || 0}</div>
                                     <div className="text-sm text-gray-400">Followers</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold text-white">{readingHistory.length}</div>
-                                    <div className="text-sm text-gray-400">Reading</div>
                                 </div>
                             </div>
 
@@ -379,64 +408,59 @@ export default function ProfilePage() {
                     </div>
                 )}
 
-                {/* Reading History Section */}
+                {/* Recent Manga Section */}
                 <div className="mt-6 bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
-                    <h2 className="text-2xl font-semibold text-white mb-4 flex items-center gap-2">
-                        📚 Reading History
+                    <h2 className="text-2xl font-semibold text-white mb-6 flex items-center gap-2">
+                        🆕 Recently Uploaded
                     </h2>
 
-                    {readingHistory.length === 0 ? (
-                        <div className="text-center py-12">
-                            <div className="text-6xl mb-4">📚</div>
-                            <h3 className="text-xl font-semibold text-gray-300 mb-2">No reading history yet</h3>
-                            <p className="text-gray-400 mb-6">Start reading to see your history here</p>
-                            <button
-                                onClick={() => router.push('/')}
-                                className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors"
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        {recentManga.map((manga) => (
+                            <div 
+                                key={manga.id}
+                                onClick={() => router.push(`/series/${manga.id}`)}
+                                className="group cursor-pointer bg-gray-700 rounded-lg overflow-hidden hover:ring-2 hover:ring-cyan-500 transition-all"
                             >
-                                Explore Manga
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {readingHistory.map((item) => (
-                                <div key={item.id} className="flex gap-4 p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
-                                    {item.mangaCover && (
+                                <div className="aspect-[3/4] relative bg-gray-600">
+                                    {manga.coverImage ? (
                                         <img 
-                                            src={item.mangaCover} 
-                                            alt={item.mangaTitle}
-                                            className="w-16 h-24 object-cover rounded"
+                                            src={manga.coverImage}
+                                            alt={manga.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                            <span className="text-4xl">📚</span>
+                                        </div>
                                     )}
-                                    <div className="flex-1">
-                                        <h3 className="font-semibold text-white">{item.mangaTitle}</h3>
-                                        <p className="text-sm text-gray-300">Chapter {item.chapterId}</p>
-                                        <p className="text-sm text-gray-400">Page {item.currentPage}</p>
-                                        <p className="text-xs text-gray-500 mt-1">{formatDate(item.lastReadAt)}</p>
-                                        {item.completed && (
-                                            <span className="inline-block mt-1 px-2 py-1 bg-green-600 text-white text-xs rounded">
-                                                Completed
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <button
-                                            onClick={() => router.push(`/series/${item.mangaId}/${item.chapterId}`)}
-                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
-                                        >
-                                            Continue
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteHistory(item.id)}
-                                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
                                 </div>
-                            ))}
+                                <div className="p-3">
+                                    <h3 className="font-semibold text-white text-sm line-clamp-2 group-hover:text-cyan-400 transition-colors">
+                                        {manga.title}
+                                    </h3>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        {formatDate(manga.createdAt)}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                        
+                        {/* Explore Button Card */}
+                        <div 
+                            onClick={() => router.push('/')}
+                            className="group cursor-pointer bg-gradient-to-br from-cyan-600 to-blue-600 rounded-lg overflow-hidden hover:ring-2 hover:ring-cyan-400 transition-all aspect-[3/4] flex flex-col items-center justify-center p-6 text-center"
+                        >
+                            <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">
+                                🔍
+                            </div>
+                            <h3 className="font-bold text-white text-lg">
+                                Explore
+                            </h3>
+                            <p className="text-sm text-cyan-100 mt-2">
+                                More Manga
+                            </p>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>

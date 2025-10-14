@@ -289,7 +289,8 @@ class ApiService {
         });
     }
 
-    // Reading History endpoints
+    // Reading History endpoints (DISABLED - not used anymore)
+    /*
     async getReadingHistory(userId: string) {
         return this.request(`/reading-history?userId=${userId}`);
     }
@@ -311,6 +312,7 @@ class ApiService {
             method: 'DELETE',
         });
     }
+    */
 
     // User Follow endpoints
     async followUser(userId: string) {
