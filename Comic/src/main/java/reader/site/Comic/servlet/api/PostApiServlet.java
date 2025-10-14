@@ -54,8 +54,14 @@ public class PostApiServlet extends HttpServlet {
         p.tags = String.join(",", ts.stream().map(Object::toString).toList());
       }
       // tạm thời không bắt buộc login
-      p.authorId = (String) body.getOrDefault("authorId", "guest-1");
+        // Nếu chưa đăng nhập thì dùng user mặc định để test
+    String authorId = (String) body.get("authorId");
+        if (authorId == null || authorId.isEmpty()) {
+            authorId = "admin-001"; // 👈 ID user thật trong comicdb.users
+        }
+      p.authorId = authorId;
 
+      System.out.println(">>> Using authorId: " + authorId);
       p = dao.create(p);
       resp.setStatus(201);
       resp.getWriter().write(Json.gson.toJson(p));

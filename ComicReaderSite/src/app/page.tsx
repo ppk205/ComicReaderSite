@@ -64,11 +64,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-<<<<<<< Updated upstream
-        const res = await fetch("http://localhost:8080/api/manga", {
-=======
         const res = await fetch("http://localhost:8080/Comic/api/manga", {
->>>>>>> Stashed changes
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Failed to fetch manga data");
