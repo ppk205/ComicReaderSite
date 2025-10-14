@@ -190,6 +190,35 @@ class ApiService {
         return this.request(`/chapter-images?${query.toString()}`);
     }
 
+    async getMangaChapters(mangaId: string) {
+        const query = new URLSearchParams({ mangaId });
+        return this.request(`/manga-chapters?${query.toString()}`);
+    }
+
+    async getMangaChapterById(id: string) {
+        return this.request(`/manga-chapters/${id}`);
+    }
+
+    async createMangaChapter(chapterData: any) {
+        return this.request('/manga-chapters', {
+            method: 'POST',
+            body: JSON.stringify(chapterData),
+        });
+    }
+
+    async updateMangaChapter(id: string, chapterData: any) {
+        return this.request(`/manga-chapters/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(chapterData),
+        });
+    }
+
+    async deleteMangaChapter(id: string) {
+        return this.request(`/manga-chapters/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
     async createManga(mangaData: any) {
         return this.request('/manga', {
             method: 'POST',

@@ -9,6 +9,7 @@
         <class>reader.site.Comic.entity.UserRoleEntity</class>
         <class>reader.site.Comic.entity.UserEntity</class>
         <class>reader.site.Comic.entity.MangaEntity</class>
+    <class>reader.site.Comic.entity.MangaChapterEntity</class>
         <class>reader.site.Comic.entity.ReadingHistoryEntity</class>
 
         <properties>

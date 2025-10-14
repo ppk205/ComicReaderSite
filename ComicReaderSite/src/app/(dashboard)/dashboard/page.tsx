@@ -152,7 +152,7 @@ export default function Dashboard() {
       entries.push({
         title: 'Browse & Manage Manga',
         description: 'Edit chapters, update descriptions, and monitor performance.',
-        href: '/dashboard/manga',
+        href: '/dashboard/manga/manage',
         tone: 'sky',
       });
     }

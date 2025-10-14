@@ -2,6 +2,7 @@ package reader.site.Comic.dao;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import reader.site.Comic.entity.MangaChapterEntity;
 import reader.site.Comic.entity.MangaEntity;
 import reader.site.Comic.model.Manga;
 import reader.site.Comic.persistence.JPAUtil;
@@ -100,6 +101,9 @@ public class MangaDAO {
                 em.getTransaction().rollback();
                 return false;
             }
+            em.createQuery("DELETE FROM MangaChapterEntity c WHERE c.mangaId = :mangaId")
+                    .setParameter("mangaId", entityId)
+                    .executeUpdate();
             em.remove(entity);
             em.getTransaction().commit();
             return true;
