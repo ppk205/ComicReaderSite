@@ -26,6 +26,12 @@ public abstract class BaseServlet extends HttpServlet {
         resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     }
 
+    @Override
+    protected void doOptions(jakarta.servlet.http.HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        setCorsHeaders(resp);
+        resp.setStatus(HttpServletResponse.SC_OK);
+    }
+
     protected void writeJson(HttpServletResponse resp, Object payload) throws IOException {
         setCorsHeaders(resp);
         resp.setContentType("application/json");

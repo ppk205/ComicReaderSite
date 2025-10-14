@@ -1,5 +1,5 @@
 // API Service for communicating with Tomcat backend
-const DEFAULT_API_BASE_URL = 'http://localhost:8080/Comic/api';
+const DEFAULT_API_BASE_URL = 'http://localhost:8080/api';
 
 const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, '') || DEFAULT_API_BASE_URL;
@@ -12,12 +12,12 @@ class ApiService {
     }
 
     // Helper method to get auth headers
-    private getAuthHeaders(): HeadersInit {
-        const token = localStorage.getItem('authToken');
-        return {
-            'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-        };
+    private getAuthHeaders(): Record<string, string> {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+        if (token) {
+            return { Authorization: `Bearer ${token}` };
+        }
+        return {};
     }
 
     // Generic fetch method
@@ -25,12 +25,31 @@ class ApiService {
         const normalisedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
         const url = `${this.baseUrl}${normalisedEndpoint}`;
 
+        const authHeaders = this.getAuthHeaders();
+        const mergedHeaders: Record<string, string> = { ...authHeaders };
+
+        if (options.headers instanceof Headers) {
+            options.headers.forEach((value, key) => {
+                mergedHeaders[key] = value;
+            });
+        } else if (Array.isArray(options.headers)) {
+            options.headers.forEach(([key, value]) => {
+                mergedHeaders[key] = value;
+            });
+        } else if (options.headers) {
+            Object.assign(mergedHeaders, options.headers as Record<string, string>);
+        }
+
+        const hasBody = options.body !== undefined && options.body !== null;
+        if (hasBody && !mergedHeaders['Content-Type']) {
+            mergedHeaders['Content-Type'] = 'application/json';
+        }
+
         try {
             const response = await fetch(url, {
                 ...options,
                 headers: {
-                    ...this.getAuthHeaders(),
-                    ...options.headers,
+                    ...mergedHeaders,
                 },
             });
 
@@ -42,7 +61,19 @@ class ApiService {
                 throw new Error(msg);
             }
 
-            return await response.json();
+            const contentLength = response.headers.get('content-length');
+            if (response.status === 204 || contentLength === '0') {
+                return null as T;
+            }
+
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                return await response.json();
+            }
+
+            // Fallback for non-JSON responses
+            const text = await response.text();
+            return text as unknown as T;
         } catch (error) {
             console.error(`API request failed for ${url}:`, error);
             throw error;
@@ -68,10 +99,10 @@ class ApiService {
     }
 
     // Register endpoint (matches /api/auth/register on backend)
-    async register(username: string, email: string, password: string) {
+    async register(username: string, email: string, password: string, role: 'reader' | 'editor' = 'reader') {
         return this.request('/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ username, email, password }),
+            body: JSON.stringify({ username, email, password, role }),
         });
     }
 
@@ -91,6 +122,11 @@ class ApiService {
 
     async getMangaById(id: string) {
         return this.request(`/manga/${id}`);
+    }
+
+    async getChapterImages(mangaId: string, chapterId: string) {
+        const query = new URLSearchParams({ mangaId, chapterId });
+        return this.request(`/chapter-images?${query.toString()}`);
     }
 
     async createManga(mangaData: any) {
