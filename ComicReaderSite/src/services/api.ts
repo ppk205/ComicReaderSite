@@ -1,5 +1,5 @@
 // API Service for communicating with Tomcat backend
-const DEFAULT_API_BASE_URL = 'http://localhost:8080/Comic/api';
+const DEFAULT_API_BASE_URL = 'http://localhost:8080/api';
 
 const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, '') || DEFAULT_API_BASE_URL;
@@ -68,10 +68,10 @@ class ApiService {
     }
 
     // Register endpoint (matches /api/auth/register on backend)
-    async register(username: string, email: string, password: string) {
+    async register(username: string, email: string, password: string, role: 'reader' | 'editor' = 'reader') {
         return this.request('/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ username, email, password }),
+            body: JSON.stringify({ username, email, password, role }),
         });
     }
 
