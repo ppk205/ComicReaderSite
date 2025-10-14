@@ -122,6 +122,7 @@ public class AuthServlet extends BaseServlet {
         writeJson(resp, new AuthResponse(token, created));
     }
 
+
     private void handleLogout(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String token = extractToken(req);
         if (token != null) {

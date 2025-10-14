@@ -58,6 +58,7 @@ public class AuthService {
         return user;
     }
 
+
     public String issueToken(User user) {
         return tokenService.issueToken(user);
     }

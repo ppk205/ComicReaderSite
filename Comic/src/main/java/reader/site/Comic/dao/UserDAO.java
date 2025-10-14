@@ -121,6 +121,22 @@ public class UserDAO {
             em.close();
         }
     }
+    public Optional<User> findByEmail(String email) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            TypedQuery<UserEntity> query = em.createQuery(
+                    "SELECT u FROM UserEntity u WHERE (u.email) = :email", UserEntity.class);
+            query.setParameter("email", email);
+            List<UserEntity> results = query.getResultList();
+            if (results.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(toModel(results.get(0)));
+        } finally {
+            em.close();
+        }
+    }
+
 
     public Optional<User> findByEmail(String email) {
         EntityManager em = JPAUtil.getEntityManager();

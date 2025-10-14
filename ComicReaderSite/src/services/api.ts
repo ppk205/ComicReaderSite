@@ -71,6 +71,7 @@ class ApiService {
         });
     }
 
+
     async logout() {
         return this.request('/auth/logout', {
             method: 'POST',
@@ -85,7 +86,11 @@ class ApiService {
     async register(username: string, email: string, password: string) {
         return this.request('/auth/register', {
             method: 'POST',
+<<<<<<< Updated upstream
             body: JSON.stringify({ username, email, password }),
+=======
+            body: JSON.stringify({ username, email, password}),
+>>>>>>> Stashed changes
         });
     }
 
