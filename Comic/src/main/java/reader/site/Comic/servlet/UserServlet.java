@@ -1,5 +1,10 @@
 package reader.site.Comic.servlet;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,11 +15,6 @@ import reader.site.Comic.model.User;
 import reader.site.Comic.model.UserRole;
 import reader.site.Comic.service.AuthService;
 import reader.site.Comic.service.TokenService;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @WebServlet(name = "UserServlet", urlPatterns = "/api/users/*")
 public class UserServlet extends BaseServlet {
@@ -80,32 +80,64 @@ public class UserServlet extends BaseServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        if (!isAuthorized(req)) {
-            writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Not authorised");
-            return;
-        }
-
         String path = req.getPathInfo();
         if (path == null || path.equals("/")) {
             writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "User id required");
             return;
         }
+        
+        String userId = path.substring(1);
+        
+        // Lấy user từ token
+        String header = req.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            header = header.substring(7);
+        }
+        User currentUser = authService.resolveToken(header);
+        
+        if (currentUser == null) {
+            writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Not authenticated");
+            return;
+        }
+        
+        // Cho phép user update profile của chính mình HOẶC admin update bất kỳ ai
+        boolean isAdmin = currentUser.getRole() != null && "admin".equalsIgnoreCase(currentUser.getRole().getName());
+        boolean isOwnProfile = currentUser.getId().equals(userId);
+        
+        if (!isAdmin && !isOwnProfile) {
+            writeError(resp, HttpServletResponse.SC_FORBIDDEN, "You can only update your own profile");
+            return;
+        }
+        
         UserRequest updates = readJson(resp, req, UserRequest.class);
         if (updates == null) {
             return;
         }
 
-        UserRole role = resolveRole(updates);
         User userUpdates = new User();
-        userUpdates.setUsername(updates.username);
-        userUpdates.setEmail(updates.email);
-        userUpdates.setStatus(updates.status);
-        userUpdates.setPassword(updates.password);
-        if (role != null) {
-            userUpdates.setRole(role);
+        
+        // User thường CHỈ được update: username, bio, avatar
+        if (isOwnProfile && !isAdmin) {
+            userUpdates.setUsername(updates.username);
+            userUpdates.setBio(updates.bio);
+            userUpdates.setAvatar(updates.avatar);
+        } 
+        // Admin được update tất cả
+        else if (isAdmin) {
+            userUpdates.setUsername(updates.username);
+            userUpdates.setEmail(updates.email);
+            userUpdates.setStatus(updates.status);
+            userUpdates.setPassword(updates.password);
+            userUpdates.setAvatar(updates.avatar);
+            userUpdates.setBio(updates.bio);
+            
+            UserRole role = resolveRole(updates);
+            if (role != null) {
+                userUpdates.setRole(role);
+            }
         }
 
-        User updated = userDAO.update(path.substring(1), userUpdates);
+        User updated = userDAO.update(userId, userUpdates);
         if (updated == null) {
             writeError(resp, HttpServletResponse.SC_NOT_FOUND, "User not found");
             return;
@@ -215,5 +247,7 @@ public class UserServlet extends BaseServlet {
         String roleId;
         String roleName;
         String status;
+        String avatar;
+        String bio;
     }
 }

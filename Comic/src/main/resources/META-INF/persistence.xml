@@ -9,6 +9,7 @@
         <class>reader.site.Comic.entity.UserRoleEntity</class>
         <class>reader.site.Comic.entity.UserEntity</class>
         <class>reader.site.Comic.entity.MangaEntity</class>
+        <class>reader.site.Comic.entity.ReadingHistoryEntity</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
