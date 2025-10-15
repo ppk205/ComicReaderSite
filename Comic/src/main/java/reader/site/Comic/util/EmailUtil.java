@@ -56,7 +56,7 @@ public class EmailUtil {
     }
 
     public static void sendResetPasswordEmail(String to, String token) {
-        String link = "https://comicreadersite.azurewebsites.net//reset-password?token=" + token;
+        String link = "https://comicreadersite.azurewebsites.net/reset-password?token=" + token;
         String subject = "Reset Your Comic Reader Password";
         String body = String.format(
                 "Hello!\n\nPlease click the following link to reset your password:\n%s\n\n"

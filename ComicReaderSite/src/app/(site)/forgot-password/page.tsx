@@ -15,7 +15,7 @@ export default function ForgotPasswordPage() {
             const formData = new URLSearchParams();
             formData.append('email', email);
 
-            const res = await fetch('https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.ioapi/auth/forgot-password', {
+            const res = await fetch('https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/api/auth/forgot-password', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formData.toString(),
