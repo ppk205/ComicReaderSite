@@ -16,6 +16,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: ACR_NAME
     steps:
       - uses: actions/checkout@v4
 
