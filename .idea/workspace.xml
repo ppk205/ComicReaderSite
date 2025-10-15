@@ -31,7 +31,6 @@
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
-    <option name="showScratchesAndConsoles" value="false" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
@@ -39,7 +38,8 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "dashboard-ppk",
+    "Smart Tomcat.Unnamed.executor": "Run",
+    "git-widget-placeholder": "Merging QuocTinh-backup",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "D:/Desktop/HK1_2025_2026/Part1/WEPR/Project/Clone13/ComicReaderSite",
@@ -52,18 +52,49 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="com.poratu.idea.plugins.tomcat" />
+      </set>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="Unnamed" type="com.poratu.idea.plugins.tomcat" nameIsGenerated="true">
+      <predefined_log_file enabled="true" id="Tomcat Localhost Log" />
+      <predefined_log_file enabled="true" id="Tomcat Access Log" />
+      <predefined_log_file id="Tomcat Catalina Log" />
+      <predefined_log_file id="Tomcat Manager Log" />
+      <predefined_log_file id="Tomcat Host Manager Log" />
+      <option name="catalinaBase" value="C:\Users\Quoc Tinh\.SmartTomcat\WEB_FINAL\Comic" />
+      <option name="contextPath" value="/" />
+      <option name="docBase" value="$PROJECT_DIR$/Comic/src/main/webapp" />
+      <option name="extraClassPath" value="" />
+      <option name="tomcatInfo">
+        <TomcatInfo>
+          <option name="name" value="Apache Tomcat/10.1.44" />
+          <option name="path" value="$PROJECT_DIR$/../JAVA/apache-tomcat-10.1.44-windows-x64/apache-tomcat-10.1.44" />
+          <option name="version" value="10.1.44.0" />
+        </TomcatInfo>
+      </option>
+      <option name="vmOptions" value="" />
+      <module name="Comic" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
         <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.26830.84" />
-        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-IU-252.26830.84" />
       </set>
     </attachedChunks>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="abdfa556-2006-48fe-833f-90ddb0c25f35" name="Changes" comment="" />
-      <created>1760556968570</created>
+      <changelist id="8a0d68dd-907b-4205-a346-02326b2e8252" name="Changes" comment="" />
+      <created>1760549507152</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1760556968570</updated>
@@ -71,8 +102,5 @@
       <workItem from="1760560300284" duration="1307000" />
     </task>
     <servers />
-  </component>
-  <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="3" />
   </component>
 </project>
