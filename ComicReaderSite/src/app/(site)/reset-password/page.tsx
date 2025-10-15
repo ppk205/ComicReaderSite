@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function ResetPasswordPage() {
+function ResetPasswordInner() {
     const router = useRouter();
     const params = useSearchParams();
-    const token = params.get('token');
+    const token = useMemo(() => params.get('token'), [params]);
 
     const [password, setPassword] = useState('');
     const [confirm, setConfirm] = useState('');
@@ -20,7 +20,7 @@ export default function ResetPasswordPage() {
         }
 
         try {
-            const res = await fetch('http://localhost:8080/Comic/api/auth/reset-password', {
+            const res = await fetch('http://localhost:8080/api/auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, password }),
@@ -88,5 +88,19 @@ export default function ResetPasswordPage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="flex min-h-screen items-center justify-center bg-[#0b0b1a] text-gray-200">
+                    Loading reset form...
+                </div>
+            }
+        >
+            <ResetPasswordInner />
+        </Suspense>
     );
 }

@@ -6,13 +6,34 @@ const API_BASE_URL =
 
 class ApiService {
     private baseUrl: string;
-
+    private resolvedBaseUrl: string | null = null;
+    private resolvingPromise: Promise<string> | null = null;
+    private candidateBaseUrls: string[];
     constructor(baseUrl: string = API_BASE_URL) {
-        this.baseUrl = baseUrl;
+        const sanitizedBase = baseUrl.replace(/\/$/, '');
+        this.baseUrl = sanitizedBase;
+
+        const envCandidates = (process.env.NEXT_PUBLIC_API_BASE_CANDIDATES || '')
+            .split(',')
+            .map((candidate) => candidate.trim())
+            .filter(Boolean)
+            .map((candidate) => candidate.replace(/\/$/, ''));
+
+        const candidates = [sanitizedBase, ...envCandidates, DEFAULT_API_BASE_URL]
+            .map((candidate) => candidate.replace(/\/$/, ''));
+
+        this.candidateBaseUrls = Array.from(new Set(candidates));
+        if (this.candidateBaseUrls.length === 0) {
+            this.candidateBaseUrls = [DEFAULT_API_BASE_URL];
+        }
+        this.baseUrl = this.candidateBaseUrls[0];
+    }
+    public getResolvedBaseUrl(): string {
+        return this.resolvedBaseUrl ?? this.baseUrl;
     }
 
-    get base() {
-        return this.baseUrl;
+    get base(): string {
+        return this.resolvedBaseUrl ?? this.baseUrl;
     }
 
     // ✅ Helper: add token if exists
@@ -22,11 +43,39 @@ class ApiService {
         if (token) headers['Authorization'] = `Bearer ${token}`;
         return headers;
     }
+        private async resolveBaseUrl(): Promise<string> {
+                if (this.resolvedBaseUrl) return this.resolvedBaseUrl;
+                if (this.resolvingPromise) return this.resolvingPromise;
 
+                this.resolvingPromise = (async () => {
+                        console.debug('[ApiService] Resolve base URL from:', this.candidateBaseUrls);
+                        for (const base of this.candidateBaseUrls) {
+                                try {
+                                        const r = await fetch(`${base}/health`, { method: 'GET', mode: 'cors' });
+                                        if (r.ok) {
+                                                this.resolvedBaseUrl = base;
+                                                console.info(`[ApiService] Using backend base URL: ${base}`);
+                                                return base;
+                                        }
+                                } catch (error) {
+                                    console.warn(`[ApiService] Probe failed: ${base}/health`, error);
+                                }
+                        }
+                        const fallback = this.candidateBaseUrls[0];
+                        this.resolvedBaseUrl = fallback;
+                        console.warn(`[ApiService] Falling back to: ${fallback}`);
+                        return fallback;
+                })().finally(() => {
+                        this.resolvingPromise = null;
+                });
+
+                return this.resolvingPromise as Promise<string>;
+        }
     // ✅ Generic fetch method (your provided code + safe merge)
     private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
         const normalisedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-        const url = `${this.baseUrl}${normalisedEndpoint}`;
+        const base = this.resolvedBaseUrl ?? (await this.resolveBaseUrl().catch(() => this.baseUrl));
+        const url = `${base}${normalisedEndpoint}`;
 
         const authHeaders = this.getAuthHeaders();
         const mergedHeaders: Record<string, string> = { ...authHeaders };
@@ -41,7 +90,9 @@ class ApiService {
         }
 
         const hasBody = options.body !== undefined && options.body !== null;
-        if (hasBody && !mergedHeaders['Content-Type']) {
+        const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
+        if (hasBody && !isFormData && !mergedHeaders['Content-Type']) {
             mergedHeaders['Content-Type'] = 'application/json';
         }
 
@@ -100,7 +151,7 @@ class ApiService {
         // always send as "email" so backend's LoginRequest.email is populated
         return this.request('/auth/login', {
             method: 'POST',
-            credentials: "include",
+            credentials: 'include',
             body: JSON.stringify({ email: identifier, password }),
         });
     }
@@ -111,7 +162,7 @@ class ApiService {
             method: 'POST',
         });
     }
-
+    
     async getCurrentUser() {
         return this.request('/auth/me');
     }
@@ -279,19 +330,22 @@ class ApiService {
 
 
     async getPosts(query = '') {
-        const r = await fetch(`${this.base}/posts${query}`, { cache: 'no-store' });
+        const base = await this.resolveBaseUrl().catch(() => this.base);
+        const r = await fetch(`${base}/posts${query}`, { cache: 'no-store' });
         if (!r.ok) throw new Error(await r.text());
         return r.json();
     }
 
     async getPostById(id: number) {
-        const r = await fetch(`${this.base}/posts/${id}`, { cache: 'no-store' });
+        const base = await this.resolveBaseUrl().catch(() => this.base);
+        const r = await fetch(`${base}/posts/${id}`, { cache: 'no-store' });
         if (!r.ok) throw new Error(await r.text());
         return r.json();
     }
 
     async createPost(data: any) {
-        const r = await fetch(`${this.base}/posts`, {
+        const base = await this.resolveBaseUrl().catch(() => this.base);
+        const r = await fetch(`${base}/posts`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -301,13 +355,15 @@ class ApiService {
     }
 
     async getComments(postId: number) {
-        const r = await fetch(`${this.base}/comments?postId=${postId}`);
+        const base = await this.resolveBaseUrl().catch(() => this.base);
+        const r = await fetch(`${base}/comments?postId=${postId}`);
         if (!r.ok) throw new Error(await r.text());
         return r.json();
     }
 
     async createComment(data: any) {
-        const r = await fetch(`${this.base}/comments`, {
+        const base = await this.resolveBaseUrl().catch(() => this.base);
+        const r = await fetch(`${base}/comments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -315,7 +371,77 @@ class ApiService {
         if (!r.ok) throw new Error(await r.text());
         return r.json();
     }
+        async getBookmarks() {
+                return this.request('/bookmarks');
+        }
 
+        async saveBookmark(bookmark: any) {
+                return this.request('/bookmarks', {
+                        method: 'POST',
+                        body: JSON.stringify(bookmark),
+                });
+        }
+
+        async deleteBookmark(id: string | number) {
+                return this.request(`/bookmarks/${id}`, {
+                        method: 'DELETE',
+                });
+        }
+
+        // ---------- EPUB ----------
+        getEpubList() {
+                return this.request('/epub');
+        }
+
+        getUserEpubs(userId: string | number) {
+                return this.request(`/epub/user/${userId}`);
+        }
+
+        getEpubById(id: string | number) {
+                return this.request(`/epub/${id}`);
+        }
+
+        deleteEpub(id: string | number) {
+                return this.request(`/epub/${id}`, { method: 'DELETE' });
+        }
+
+        uploadEpub(file: File, title?: string, userId?: string) {
+            if (typeof FormData === 'undefined') {
+                throw new Error('FormData is not available in the current environment.');
+            }
+                const form = new FormData();
+                form.append('file', file);
+                if (title) form.append('title', title);
+                if (userId) form.append('userId', userId);
+                // Do not set Content-Type so browser can add boundary automatically
+                return this.request('/epub', { method: 'POST', body: form });
+        }
+
+        /** ArrayBuffer EPUB (dùng cho epub.js) */
+        async getEpubFileArrayBuffer(id: string | number): Promise<ArrayBuffer> {
+                const baseUrl = await this.resolveBaseUrl();
+                const url = `${baseUrl}/epub/file?id=${encodeURIComponent(String(id))}`;
+                const res = await fetch(url, {
+                        method: 'GET',
+                        mode: 'cors',
+                        headers: { ...this.getAuthHeaders() },
+                });
+                if (!res.ok) {
+                        let msg = `HTTP ${res.status}`;
+                        try {
+                                const payload = await res.json();
+                                msg = payload?.message || payload?.error || msg;
+                        } catch {}
+                        throw new Error(msg);
+                }
+                return await res.arrayBuffer();
+        }
+
+        /** (optional) absolute URL to EPUB file */
+        async getEpubFileUrl(id: string | number): Promise<string> {
+                const baseUrl = await this.resolveBaseUrl();
+                return `${baseUrl}/epub/file?id=${encodeURIComponent(String(id))}`;
+        }
 
 }
 

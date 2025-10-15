@@ -6,16 +6,16 @@ on:
       - main  # chạy khi push lên nhánh main
 
 env:
-  AZURE_WEBAPP_NAME: your-app-service-name     # tên App Service
-  AZURE_RESOURCE_GROUP: ComicWeb    # tên Resource Group
-  ACR_NAME: yourregistry                       # tên Azure Container Registry
+  AZURE_WEBAPP_NAME: comicreadersite     # tên App Service
+  AZURE_RESOURCE_GROUP: WebMySQL1    # tên Resource Group
+  ACR_NAME: comicreadersite                       # tên Azure Container Registry
   IMAGE_BACKEND: backend
   IMAGE_FRONTEND: frontend
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
+    environment: ACR_NAME
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -31,7 +31,7 @@ jobs:
       # Build và push multi-container bằng docker-compose
       - name: Build and push images with Docker Compose
         run: |
-          docker-compose -f docker-compose.yml build
+          docker compose -f docker-compose.yml build
           docker tag $(docker images -q ${{ env.IMAGE_BACKEND }}) ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_BACKEND }}:latest
           docker tag $(docker images -q ${{ env.IMAGE_FRONTEND }}) ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_FRONTEND }}:latest
           docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_BACKEND }}:latest

@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 4a1775bda2cabcb014c8931eb797d63f39bf69e1
 version: "3.8"
 services:
   backend:
@@ -11,18 +7,4 @@ services:
   frontend:
     build: ./ComicReaderSite
     ports:
-<<<<<<< HEAD
-=======
-=======
-version: "3.8"
-services:
-  backend:
-    build: ./Comic
-    ports:
-      - "8080:8080"
-  frontend:
-    build: ./ComicReaderSite
-    ports:
->>>>>>> 8056ef92f9ca6650cbc5711d7c4ba2540a5acd06
->>>>>>> 4a1775bda2cabcb014c8931eb797d63f39bf69e1
       - "3000:3000" 

@@ -1,11 +1,21 @@
 'use client';
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { apiService } from "@/services/api";
 
 export default function ChapterReaderPage({ params }: { params: { seriesId: string, chapterId: string } }) {
     const uniqueKey = `${params.seriesId}-${params.chapterId}`;
-    return <ChapterReader key={uniqueKey} params={params} />;
+    return (
+        <Suspense
+            fallback={
+                <div className="flex min-h-screen items-center justify-center bg-gray-900 text-yellow-200">
+                    Đang tải dữ liệu...
+                </div>
+            }
+        >
+            <ChapterReader key={uniqueKey} params={params} />
+        </Suspense>
+    );
 }
 
 function ChapterReader({ params }: { params: { seriesId: string; chapterId: string } }) {
