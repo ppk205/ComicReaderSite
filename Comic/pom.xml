@@ -4,16 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
-    <artifactId>ComicDashboard</artifactId>
+    <groupId>reader.site</groupId>
+    <artifactId>Comic</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>ComicDashboard</name>
     <packaging>war</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.target>21</maven.compiler.target>
-        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
         <junit.version>5.13.2</junit.version>
         <!-- Use Hibernate ORM 6.5.x (Jakarta Persistence 3.1 compatible) -->
         <hibernate.version>6.5.2.Final</hibernate.version>
@@ -124,6 +123,7 @@
     </dependencies>
 
     <build>
+        <finalName>Comic</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

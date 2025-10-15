@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
-    const [credentials, setCredentials] = useState({ username: '', password: '' });
+    const [credentials, setCredentials] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
@@ -18,51 +17,62 @@ export default function Login() {
         setError('');
 
         try {
+            // login will accept an object { email, password }
             await login(credentials);
             router.push('/');
         } catch (err) {
-            setError('Invalid username or password');
+            setError('Invalid email or password');
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Comic Reader Admin
+        <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg,#070615 0%,#05040a 100%)' }}>
+            <div className="max-w-md w-full space-y-8 px-4">
+                <div className="text-center">
+                    <h2 className="mt-6 text-center text-3xl font-extrabold" style={{ color: '#E9D5FF' }}>
+                        Comic Reader
                     </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Sign in to your admin account
+                    <p className="mt-2 text-center text-sm" style={{ color: '#BDB6CC' }}>
+                        Sign in to your account
                     </p>
                 </div>
-                <form className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow" onSubmit={handleSubmit}>
+                <form
+                    className="mt-8 space-y-6 p-8 rounded-lg shadow-lg"
+                    onSubmit={handleSubmit}
+                    style={{ background: '#0f1724', boxShadow: '0 10px 30px rgba(2,6,23,0.7)', border: '1px solid rgba(255,255,255,0.02)' }}
+                >
                     {error && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        <div className="px-4 py-3 rounded" style={{ background: '#3b1214', color: '#ffdede' }}>
                             {error}
                         </div>
                     )}
 
                     <div>
-                        <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                            Username
+                        <label htmlFor="email" className="block text-sm font-medium" style={{ color: '#E9D5FF' }}>
+                            Email
                         </label>
                         <input
-                            id="username"
-                            name="username"
-                            type="text"
+                            id="email"
+                            name="email"
+                            type="email"
                             required
-                            className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Enter your username"
-                            value={credentials.username}
-                            onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                            className="mt-1 block w-full px-3 py-2 rounded-md focus:outline-none"
+                            placeholder="you@example.com"
+                            value={credentials.email}
+                            onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                            style={{
+                                background: '#071025',
+                                border: '1px solid #2b2f3a',
+                                color: '#E6EEF6',
+                                placeholderColor: '#9aa0b2'
+                            }}
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="password" className="block text-sm font-medium" style={{ color: '#E9D5FF' }}>
                             Password
                         </label>
                         <input
@@ -70,10 +80,16 @@ export default function Login() {
                             name="password"
                             type="password"
                             required
-                            className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            className="mt-1 block w-full px-3 py-2 rounded-md focus:outline-none"
                             placeholder="Enter your password"
                             value={credentials.password}
                             onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                            style={{
+                                background: '#071025',
+                                border: '1px solid #2b2f3a',
+                                color: '#E6EEF6',
+                                placeholderColor: '#9aa0b2'
+                            }}
                         />
                     </div>
 
@@ -81,20 +97,20 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                            className="group relative w-full flex justify-center py-2 px-4 text-sm font-medium rounded-md disabled:opacity-50"
+                            style={{
+                                color: '#fff',
+                                background: 'linear-gradient(90deg,#7C3AED 0%,#D946EF 100%)',
+                                border: 'none',
+                                boxShadow: '0 6px 20px rgba(124,58,237,0.25)'
+                            }}
                         >
                             {isLoading ? 'Signing in...' : 'Sign in'}
                         </button>
                     </div>
 
-                    <div className="text-sm text-gray-600">
-                        <p>Demo accounts:</p>
-                        <p>Admin: admin/admin123</p>
-                        <p>Moderator: mod/mod123</p>
-                    </div>
-
                     <div className="text-center mt-4">
-                        <a href="/register" className="text-indigo-600 hover:text-indigo-800 text-sm">
+                        <a href="/register" style={{ color: '#D8B4FE' }} className="hover:opacity-90 text-sm">
                             Don't have an account? Register
                         </a>
                     </div>

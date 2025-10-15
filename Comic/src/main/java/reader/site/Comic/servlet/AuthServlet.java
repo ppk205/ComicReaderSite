@@ -67,7 +67,15 @@ public class AuthServlet extends BaseServlet {
         if (loginRequest == null) {
             return;
         }
-        User user = authService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
+
+        String identifier = loginRequest.getEmail();
+        if (identifier == null || identifier.isBlank() ||
+                loginRequest.getPassword() == null || loginRequest.getPassword().isBlank()) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "email and password are required");
+            return;
+        }
+
+        User user = authService.authenticate(identifier, loginRequest.getPassword());
         if (user == null) {
             writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Invalid credentials");
             return;
@@ -76,6 +84,7 @@ public class AuthServlet extends BaseServlet {
         String token = authService.issueToken(user);
         writeJson(resp, new AuthResponse(token, user));
     }
+
 
     private void handleRegister(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         RegisterRequest registerRequest = readJson(resp, req, RegisterRequest.class);
@@ -91,8 +100,8 @@ public class AuthServlet extends BaseServlet {
         }
 
         // Check username availability
-        if (userDAO.findByUsername(registerRequest.getUsername()).isPresent()) {
-            writeError(resp, HttpServletResponse.SC_CONFLICT, "Username already taken");
+        if (userDAO.findByEmail(registerRequest.getEmail()).isPresent()) {
+            writeError(resp, HttpServletResponse.SC_CONFLICT, "Email already taken");
             return;
         }
 
@@ -113,6 +122,7 @@ public class AuthServlet extends BaseServlet {
         String token = authService.issueToken(created);
         writeJson(resp, new AuthResponse(token, created));
     }
+
 
     private void handleLogout(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String token = extractToken(req);
