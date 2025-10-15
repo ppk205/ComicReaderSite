@@ -1,5 +1,5 @@
 // API Service for communicating with Tomcat backend
-const DEFAULT_API_BASE_URL = 'http://localhost:8080/api';
+const DEFAULT_API_BASE_URL = 'https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/api';
 
 const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, '') || DEFAULT_API_BASE_URL;

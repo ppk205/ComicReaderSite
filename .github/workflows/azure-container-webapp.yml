@@ -3,12 +3,13 @@ name: Build and Deploy to Azure
 on:
   push:
     branches:
-      - main  # chạy khi push lên nhánh main
+      - main
 
 env:
-  AZURE_WEBAPP_NAME: comicreadersite     # tên App Service
-  AZURE_RESOURCE_GROUP: WebMySQL1    # tên Resource Group
-  ACR_NAME: comicreadersite                       # tên Azure Container Registry
+  AZURE_WEBAPP_NAME: comicreadersite
+  AZURE_RESOURCE_GROUP: WebMySQL1
+  ACR_NAME: comicreadersite
+  ACR_LOGIN_SERVER: comicreadersite.azurecr.io
   IMAGE_BACKEND: backend
   IMAGE_FRONTEND: frontend
 
@@ -17,32 +18,33 @@ jobs:
     runs-on: ubuntu-latest
     environment: ACR_NAME
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      # Login vào ACR
       - name: Log in to Azure Container Registry
         uses: azure/docker-login@v1
         with:
-          login-server: ${{ env.ACR_NAME }}.azurecr.io
+          login-server: ${{ env.ACR_LOGIN_SERVER }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      # Build và push multi-container bằng docker-compose
-      - name: Build and push images with Docker Compose
+      - name: Build backend image
         run: |
-          docker compose -f docker-compose.yml build
-          docker tag $(docker images -q ${{ env.IMAGE_BACKEND }}) ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_BACKEND }}:latest
-          docker tag $(docker images -q ${{ env.IMAGE_FRONTEND }}) ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_FRONTEND }}:latest
-          docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_BACKEND }}:latest
-          docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_FRONTEND }}:latest
+          docker build -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_BACKEND }}:latest ./Comic
 
-      # Deploy lên Azure App Service (multi-container)
-      - name: Deploy to Azure Web App (Docker Compose)
-        uses: azure/webapps-deploy@v2
+      - name: Build frontend image
+        run: |
+          docker build -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_FRONTEND }}:latest ./ComicReaderSite
+
+      - name: Push images
+        run: |
+          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_BACKEND }}:latest
+          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_FRONTEND }}:latest
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           images: |
-            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_BACKEND }}:latest
-            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_FRONTEND }}:latest
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_BACKEND }}:latest
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_FRONTEND }}:latest
