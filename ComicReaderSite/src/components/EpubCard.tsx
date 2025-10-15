@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import apiService from '@/services/api';
+import epubApi from '@/services/epubApi';
 
 export interface EpubBook {
   id: number;
@@ -31,7 +31,7 @@ export default function EpubCard({
     if (!window.confirm(`Are you sure you want to delete "${book.title}"?`)) return;
 
     try {
-      await apiService.deleteEpub(book.id);
+      await epubApi.deleteEpub(book.id);
       onBookDeleted();
     } catch (err: any) {
       console.error('Delete failed:', err);
