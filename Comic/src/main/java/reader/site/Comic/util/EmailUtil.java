@@ -3,6 +3,8 @@ package reader.site.Comic.util;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import reader.site.Comic.Config;
+
 import java.util.Properties;
 
 public class EmailUtil {
@@ -44,19 +46,28 @@ public class EmailUtil {
         }
     }
 
-    // ✅ Gửi mail kích hoạt tài khoản
+    private static final String BACKEND_DOMAIN = Config.get("backend.domain");
+    private static final String FRONTEND_DOMAIN = Config.get("frontend.domain");
+
     public static void sendActivationEmail(String to, String token) {
-        String link = "http://localhost:8080/Comic/api/auth/activate?token=" + token;
-        String subject = "Kích hoạt tài khoản Comic Reader";
-        String body = "Xin chào!\n\nNhấn vào liên kết sau để kích hoạt tài khoản:\n" + link;
+        String link = BACKEND_DOMAIN + "/Comic/api/auth/activate?token=" + token;
+        String subject = "Activate Your Comic Reader Account";
+        String body = String.format(
+                "Hello!\n\nPlease click the following link to activate your account:\n%s\n\n"
+                        + "If you didn’t request this, please ignore this email.\n\nBest regards,\nComic Reader Team",
+                link
+        );
         sendEmail(to, subject, body);
     }
 
-    // ✅ Gửi mail đặt lại mật khẩu
     public static void sendResetPasswordEmail(String to, String token) {
-        String link = "http://localhost:3000/reset-password?token=" + token;
-        String subject = "Đặt lại mật khẩu Comic Reader";
-        String body = "Xin chào!\n\nNhấn vào liên kết sau để đặt lại mật khẩu của bạn:\n" + link;
+        String link = FRONTEND_DOMAIN + "/reset-password?token=" + token;
+        String subject = "Reset Your Comic Reader Password";
+        String body = String.format(
+                "Hello!\n\nPlease click the following link to reset your password:\n%s\n\n"
+                        + "If you didn’t request this, please ignore this email.\n\nBest regards,\nComic Reader Team",
+                link
+        );
         sendEmail(to, subject, body);
     }
 }
