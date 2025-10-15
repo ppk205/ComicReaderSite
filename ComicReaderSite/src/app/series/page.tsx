@@ -33,6 +33,7 @@ export default function SeriesListPage() {
         <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-3xl font-bold">All Series</h1>
+            <p className="text-gray-400 mt-1">Browse comics — responsive grid layout</p>
           </div>
 
           <div className="flex items-center gap-3">

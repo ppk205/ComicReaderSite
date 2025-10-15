@@ -44,7 +44,7 @@ export default function SearchBar() {
         onChange={(e) => setSearchTerm(e.target.value)}
         className="search-bar"
       />
-      
+
       {searchTerm && (
         <div className="absolute top-full left-0 right-0 bg-black border border-black-300 rounded-lg mt-1 max-h-60 overflow-y-auto z-50">
           {isLoading ? (

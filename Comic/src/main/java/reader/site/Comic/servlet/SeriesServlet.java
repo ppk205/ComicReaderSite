@@ -22,48 +22,24 @@ public class SeriesServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        // NOTE: move these to environment variables or config in production
-        dbUrl = "jdbc:mysql://websql1.mysql.database.azure.com:3306/comic?useSSL=true&allowPublicKeyRetrieval=true";
-        dbUser = "ppk123@websql1"; // Azure MySQL usually requires user@servername
+        dbUrl = "jdbc:mysql://websql1.mysql.database.azure.com:3306/comic?useSSL=true";
+        dbUser = "ppk123";
         dbPass = "Mysql@1234";
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            System.out.println("[SeriesServlet] JDBC driver loaded");
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
             throw new ServletException("MySQL driver not found", e);
         }
-
-        // Optional: test connection at init so we can see error early
-        try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPass)) {
-            System.out.println("[SeriesServlet] ✅ Connected to DB in init()");
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            throw new ServletException("Cannot connect to DB in init(): " + ex.getMessage(), ex);
-        }
-    }
-
-    // CORS headers helper
-    private void setCorsHeaders(HttpServletResponse resp) {
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    }
-
-    @Override
-    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        setCorsHeaders(resp);
-        resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        setCorsHeaders(resp);
         resp.setContentType("application/json");
         resp.setCharacterEncoding("utf-8");
+        resp.setHeader("Access-Control-Allow-Origin", "*");
 
         String idParam = req.getParameter("id");
 
@@ -113,12 +89,8 @@ public class SeriesServlet extends HttpServlet {
                 resp.getWriter().write(gson.toJson(list));
             }
         } catch (SQLException ex) {
-            ex.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(gson.toJson(Map.of("error", "DB error", "message", ex.getMessage())));
-        } catch (NumberFormatException nf) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write(gson.toJson(Map.of("error", "Invalid id")));
         }
     }
 }

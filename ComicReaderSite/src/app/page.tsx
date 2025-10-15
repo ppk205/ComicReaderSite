@@ -14,11 +14,15 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const perPage = 12;
 
-  // ✅ Fetch manga from Spring Boot backend
+  // ✅ Base URL from env or fallback
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/Comic/api";
+
+  // ✅ Fetch manga from backend
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch("http://localhost:8080/api/manga", {
+        const res = await fetch("http://localhost:8080/Comic/api/manga", {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Failed to fetch manga data");
@@ -61,9 +65,10 @@ export default function Home() {
             Featured Manga
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {featuredManga.map((manga) => (
+            {featuredManga.slice(0, 5).map((manga) => (
               <MangaCard key={manga.id} manga={manga} featured />
             ))}
+
           </div>
         </section>
 
@@ -83,7 +88,11 @@ export default function Home() {
               }}
               className="px-3 py-2 border rounded-lg w-full md:w-1/3"
             />
+            <label htmlFor="sort-select" className="sr-only">
+              Sort manga
+            </label>
             <select
+              id="sort-select"
               value={sort}
               onChange={(e) => setSort(e.target.value)}
               className="px-3 py-2 border rounded-lg"

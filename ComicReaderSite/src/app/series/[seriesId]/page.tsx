@@ -13,7 +13,6 @@ type Manga = {
 export default function SeriesDetailPage({ params }: { params: { seriesId: string } }) {
   const [manga, setManga] = useState<Manga | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeIndex, setActiveIndex] = useState<number>(-1); // highlight row when clicked
 
   useEffect(() => {
     let active = true;
@@ -58,23 +57,6 @@ export default function SeriesDetailPage({ params }: { params: { seriesId: strin
       active = false;
     };
   }, [params.seriesId]);
-
-  // thêm ở đầu component (trước return)
-  const topTags = [
-    { label: "⚡ Latest Updated", className: "bg-green-100 text-gray-900" },
-    { label: "✌️ New Release", className: "bg-yellow-100 text-gray-900" },
-    { label: "🔥 Most Viewed", className: "bg-pink-200 text-gray-900" },
-    { label: "✅ Completed", className: "bg-cyan-100 text-gray-900" },
-  ];
-
-  const otherTags = [
-    "Action","Adventure","Cars","Comedy","Dementia","Demons","Doujinshi","Drama","Ecchi",
-    "Fantasy","Game","Gender Bender","Harem","Hentai","Historical","Horror","Josei","Kids","Magic",
-    "Martial Arts","Mecha","Military","Music","Mystery","Parody","Police","Psychological","Romance",
-    "Samurai","School","Sci-Fi","Seinen","Shoujo","Shoujo Ai","Shounen","Shounen Ai","Slice of Life",
-    "Space","Sports","Super Power","Supernatural","Thriller","Vampire","Yaoi","Yuri","Isekai",
-    "Romance Comedy","Slice of Life Comedy","Psychological Thriller","Historical Drama"
-  ];
 
   if (loading) {
     return (
@@ -139,91 +121,46 @@ export default function SeriesDetailPage({ params }: { params: { seriesId: strin
         </div>
       </div>
 
-      {/* --- Chapter List (styled like mockup) --- */}
+      {/* --- Chapter List --- */}
       <div className="flex gap-8 px-16 pb-10">
-        <div className="flex-2 bg-gray-800 rounded-xl overflow-hidden w-full">
-          {/* header bar */}
-          <div className="bg-[#222] border-b border-purple-700/30 px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="text-white font-semibold pl-1">List Chapter</div>
-            </div>
-            <div className="flex items-center gap-3">
-              <input
-                type="text"
-                placeholder="Number of Chapter"
-                className="bg-gray-900 text-gray-300 placeholder-gray-600 rounded px-3 py-2 text-sm"
-                aria-label="Search chapter number"
-              />
-            </div>
+        <div className="flex-2 bg-gray-800 rounded-xl p-6 w-full">
+          <div className="flex items-center mb-4">
+            <div className="font-bold text-xl text-purple-400 mr-4">List Chapter</div>
+            <div className="bg-gray-900 rounded px-3 py-1 mr-4">Language: EN</div>
+            <input
+              type="text"
+              placeholder="Search chapter..."
+              className="bg-gray-900 rounded px-3 py-1 text-white border-none"
+            />
           </div>
 
-          {/* scrollable list */}
-          <div className="max-h-[520px] overflow-y-auto">
-            <ul className="divide-y divide-gray-700">
-              {manga.chapters && manga.chapters.length > 0 ? (
-                manga.chapters.map((ch, idx) => {
-                  const isActive = idx === activeIndex;
-                  return (
-                    <li
-                      key={idx}
-                      onClick={() => setActiveIndex(idx)}
-                      className={`flex items-center justify-between px-4 py-4 cursor-pointer transition ${isActive ? "bg-gray-900 border-l-4 border-purple-600" : "hover:bg-gray-800"}`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="text-gray-400">📄</div>
-                        <div className={`text-sm ${isActive ? "text-purple-300 font-semibold" : "text-gray-200"}`}>
-                          {ch}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="text-xs text-gray-400 hidden sm:block"> {/* optional meta */} </div>
-                        <Link
-                          href={`/series/${params.seriesId}/${idx + 1}`}
-                          className={`px-3 py-1 rounded-md text-sm font-semibold transition ${isActive ? "bg-purple-600 text-white" : "bg-gray-700 text-gray-200 hover:bg-gray-600"}`}
-                        >
-                          Read
-                        </Link>
-                      </div>
-                    </li>
-                  );
-                })
-              ) : (
-                <li className="py-6 text-center text-gray-400">No chapters found.</li>
-              )}
-            </ul>
-          </div>
+          <ul className="divide-y divide-gray-700">
+            {manga.chapters && manga.chapters.length > 0 ? (
+              manga.chapters.map((ch, idx) => (
+                <li key={idx} className="flex items-center py-3">
+                  <span className="mr-3 text-lg">📄</span>
+                  <span className="flex-1">{ch}</span>
+                  <Link
+                    href={`/series/${params.seriesId}/${idx + 1}`}
+                    className="bg-gray-700 rounded px-4 py-1 font-semibold hover:bg-gray-600 transition"
+                  >
+                    Read
+                  </Link>
+                </li>
+              ))
+            ) : (
+              <li className="py-3 text-gray-400">No chapters found.</li>
+            )}
+          </ul>
         </div>
 
-        {/* --- Sidebar (keep existing tags/sidebar) --- */}
+        {/* --- Sidebar --- */}
         <div className="flex-1 bg-gray-800 rounded-xl p-6">
           <div className="font-bold text-xl mb-4">Genres</div>
-
-          {/* Top highlighted tags */}
           <div className="flex gap-2 flex-wrap mb-4">
-            {topTags.map((t) => (
-              <button
-                key={t.label}
-                type="button"
-                className={`${t.className} rounded px-4 py-2 font-semibold text-sm`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tag pills */}
-          <div className="flex gap-2 flex-wrap">
-            {otherTags.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                className="bg-gray-800 text-gray-200 px-3 py-1 rounded-full text-sm hover:bg-gray-700 transition"
-                aria-label={`Tag ${tag}`}
-              >
-                {tag}
-              </button>
-            ))}
+            <span className="bg-green-100 text-gray-900 rounded px-3 py-1 font-semibold">Latest</span>
+            <span className="bg-yellow-100 text-gray-900 rounded px-3 py-1 font-semibold">New</span>
+            <span className="bg-pink-200 text-gray-900 rounded px-3 py-1 font-semibold">Popular</span>
           </div>
         </div>
       </div>
