@@ -46,7 +46,6 @@ export default function CreatePostPage() {
                     .map((s) => s.trim())
                     .filter(Boolean)
                     .join(','),
-                authorId: me.id,
             };
 
             const result = await apiService.createPost(payload);

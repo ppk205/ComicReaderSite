@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiService } from '@/services/api';
-import { Manga } from '@/types/manga';
 
 interface UserProfile {
     id: string;
@@ -28,9 +27,99 @@ interface UserProfile {
     bio?: string;
 }
 
+interface RecentManga {
+    id: string;
+    title: string;
+    coverImage?: string | null;
+    createdAt?: string | null;
+}
+
+function normaliseUserProfile(source: unknown): UserProfile {
+    const raw = (source ?? {}) as Record<string, unknown>;
+    const idCandidate = raw.id ?? raw.userId ?? raw.user_id ?? raw._id;
+    if (!idCandidate) {
+        throw new Error('Invalid user profile payload');
+    }
+
+    const toNumber = (value: unknown): number | undefined => {
+        if (value === null || value === undefined) {
+            return undefined;
+        }
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : undefined;
+    };
+
+    const roleSource = (raw.role ?? null) as Record<string, unknown> | null;
+    const rawPermissions =
+        (roleSource?.permissions as unknown) ?? raw.permissions ?? raw.permissionList ?? [];
+    const permissions = Array.isArray(rawPermissions)
+        ? rawPermissions.map((perm) => String(perm))
+        : [];
+
+    const roleIdCandidate = roleSource?.id ?? raw.roleId ?? raw.role_id ?? null;
+    const roleNameCandidate = roleSource?.name ?? raw.roleName ?? raw.role ?? null;
+    const resolvedRoleId =
+        roleIdCandidate ?? (typeof roleNameCandidate === 'string' ? roleNameCandidate.toLowerCase() : undefined);
+    const role =
+        roleIdCandidate || roleNameCandidate
+            ? {
+                  id: String(resolvedRoleId ?? roleIdCandidate ?? roleNameCandidate),
+                  name: String(roleNameCandidate ?? roleIdCandidate ?? 'Member'),
+                  permissions,
+              }
+            : undefined;
+
+    return {
+        id: String(idCandidate),
+        username: String(raw.username ?? raw.userName ?? raw.name ?? 'User'),
+        email: String(raw.email ?? raw.mail ?? raw.userEmail ?? 'unknown@example.com'),
+        status: (raw.status as string) ?? undefined,
+        createdAt: (raw.createdAt as string) ?? (raw.created_at as string) ?? undefined,
+        updatedAt: (raw.updatedAt as string) ?? (raw.updated_at as string) ?? undefined,
+        lastLogin: (raw.lastLogin as string) ?? (raw.last_login as string) ?? undefined,
+        roleId: resolvedRoleId ? String(resolvedRoleId) : undefined,
+        role,
+        isOwnProfile: true,
+        seriesCount: toNumber(raw.seriesCount ?? raw.series_count) ?? 0,
+        followersCount: toNumber(raw.followersCount ?? raw.followers_count) ?? 0,
+        viewersCount: toNumber(raw.viewersCount ?? raw.viewers_count) ?? 0,
+        isFollowing: (raw.isFollowing as boolean) ?? undefined,
+        avatar:
+            (raw.avatar as string) ??
+            (raw.avatarUrl as string) ??
+            (raw.profileImage as string) ??
+            undefined,
+        bio: (raw.bio as string) ?? (raw.about as string) ?? (raw.description as string) ?? undefined,
+    };
+}
+
+function normaliseRecentMangaList(response: unknown): RecentManga[] {
+    const rawList: any[] = Array.isArray(response)
+        ? response
+        : Array.isArray((response as any)?.items)
+        ? (response as any).items
+        : [];
+
+    return rawList
+        .map((item: any, index: number): RecentManga => {
+            const idCandidate = item?.id ?? item?.mangaId ?? item?.manga_id ?? `manga-${index}`;
+            const created =
+                item?.createdAt ?? item?.created_at ?? item?.publishedAt ?? item?.published_at ?? null;
+            const cover =
+                item?.cover ?? item?.coverImage ?? item?.cover_url ?? item?.thumbnail ?? item?.image ?? null;
+            return {
+                id: String(idCandidate),
+                title: String(item?.title ?? item?.name ?? item?.mangaTitle ?? 'Untitled'),
+                coverImage: cover ? String(cover) : null,
+                createdAt: typeof created === 'string' ? created : created ? new Date(created).toISOString() : null,
+            };
+        })
+        .filter((item) => Boolean(item.id && item.title));
+}
+
 export default function ProfilePage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [recentManga, setRecentManga] = useState<Manga[]>([]);
+    const [recentManga, setRecentManga] = useState<RecentManga[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -47,20 +136,15 @@ export default function ProfilePage() {
             }
 
             // Get current user from auth context
-            const currentUser = await apiService.getCurrentUser();
-            
-            if (!currentUser) {
+            const rawUser = await apiService.getCurrentUser();
+
+            if (!rawUser) {
                 router.push('/login');
                 return;
             }
 
-            setProfile({
-                ...currentUser,
-                isOwnProfile: true,
-                seriesCount: 0,
-                followersCount: 0,
-                viewersCount: 0,
-            });
+            const currentUser = normaliseUserProfile(rawUser);
+            setProfile(currentUser);
 
             setEditedProfile({
                 username: currentUser.username,
@@ -72,24 +156,14 @@ export default function ProfilePage() {
             // Fetch recent manga (4 newest)
             try {
                 const response = await apiService.getMangaList();
-                const allManga: any[] = Array.isArray(response) ? response : [];
-                console.log('📚 All manga from API:', allManga);
-                console.log('📚 First manga:', allManga?.[0]);
-                
-                // Map backend 'cover' field to frontend 'coverImage'
-                const mappedManga = Array.isArray(allManga) 
-                    ? allManga.map(manga => ({
-                        ...manga,
-                        coverImage: manga.cover || manga.coverImage,
-                        createdAt: manga.createdAt || new Date().toISOString()
-                    }))
-                    : [];
-                
-                const sortedManga = mappedManga
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                const sortedManga: RecentManga[] = normaliseRecentMangaList(response)
+                    .sort((a, b) => {
+                        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                        return dateB - dateA;
+                    })
                     .slice(0, 4);
-                    
-                console.log('✅ Recent 4 manga:', sortedManga);
+
                 setRecentManga(sortedManga);
             } catch (mangaError) {
                 console.warn('Failed to load recent manga:', mangaError);
@@ -354,6 +428,8 @@ export default function ProfilePage() {
                                     type="text"
                                     value={editedProfile.username || ''}
                                     onChange={(e) => setEditedProfile({ ...editedProfile, username: e.target.value })}
+                                    placeholder="Enter username"
+                                    title="Username"
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                                 />
                             </div>
@@ -364,6 +440,8 @@ export default function ProfilePage() {
                                     type="email"
                                     value={editedProfile.email || ''}
                                     onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                                    placeholder="Enter email"
+                                    title="Email"
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                                 />
                             </div>
@@ -439,7 +517,7 @@ export default function ProfilePage() {
                                         {manga.title}
                                     </h3>
                                     <p className="text-xs text-gray-400 mt-1">
-                                        {formatDate(manga.createdAt)}
+                                        {formatDate(manga.createdAt ?? undefined)}
                                     </p>
                                 </div>
                             </div>

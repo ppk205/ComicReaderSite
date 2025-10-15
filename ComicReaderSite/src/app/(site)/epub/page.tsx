@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import EpubUpload from '@/components/EpubUpload';
 import EpubCard from '@/components/EpubCard';
 import { useAuth } from '@/contexts/AuthContext';
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080/api';
+import api from '@/services/api';
 
 interface EpubBook {
   id: number;
@@ -14,6 +12,7 @@ interface EpubBook {
   fileName: string;
   fileSizeInBytes: number;
   uploadDate: string;
+  storagePath: string;
 }
 
 const STORAGE_LIMIT_MB = 500;
