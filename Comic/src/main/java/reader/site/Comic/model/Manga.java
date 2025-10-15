@@ -2,12 +2,7 @@ package reader.site.Comic.model;
 
 import java.util.List;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-@Document(collection = "manga")
 public class Manga {
-    @Id
     private String id;
     private String title;
     private String cover;
