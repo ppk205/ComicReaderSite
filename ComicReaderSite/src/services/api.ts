@@ -1,5 +1,5 @@
 // API Service for communicating with Tomcat backend
-const DEFAULT_API_BASE_URL = 'http://localhost:8080/Comic/api';
+const DEFAULT_API_BASE_URL = 'http://localhost:8080/api';
 
 const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, '') || DEFAULT_API_BASE_URL;
@@ -142,6 +142,35 @@ class ApiService {
     async getChapterImages(mangaId: string, chapterId: string) {
         const query = new URLSearchParams({ mangaId, chapterId });
         return this.request(`/chapter-images?${query.toString()}`);
+    }
+
+    async getMangaChapters(mangaId: string) {
+        const query = new URLSearchParams({ mangaId });
+        return this.request(`/manga-chapters?${query.toString()}`);
+    }
+
+    async getMangaChapterById(id: string) {
+        return this.request(`/manga-chapters/${id}`);
+    }
+
+    async createMangaChapter(chapterData: any) {
+        return this.request('/manga-chapters', {
+            method: 'POST',
+            body: JSON.stringify(chapterData),
+        });
+    }
+
+    async updateMangaChapter(id: string, chapterData: any) {
+        return this.request(`/manga-chapters/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(chapterData),
+        });
+    }
+
+    async deleteMangaChapter(id: string) {
+        return this.request(`/manga-chapters/${id}`, {
+            method: 'DELETE',
+        });
     }
 
     async createManga(mangaData: any) {

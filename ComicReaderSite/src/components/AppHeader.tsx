@@ -109,6 +109,14 @@ export function AppHeader() {
                       Profile
                     </Link>
                     <Link
+                      href="/epub"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50"
+                      onClick={() => setMenuOpen(false)}
+                      role="menuitem"
+                    >
+                      EPUB Library
+                    </Link>
+                    <Link
                       href="/dashboard"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50"
                       onClick={() => setMenuOpen(false)}

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import { AuthState, LoginCredentials, User } from '../types/auth';
-import { apiService } from '../services/api';
+import { AuthState, LoginCredentials, User } from '@/types/auth';
+import { apiService } from '@/services/api';
 
 const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME || 'admin';
 const DEFAULT_PASSWORD = process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || 'admin123';

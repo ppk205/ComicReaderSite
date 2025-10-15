@@ -154,6 +154,14 @@ export default function MangaManagement() {
               >
                 {isLoading ? 'Refreshing…' : 'Refresh Data'}
               </button>
+              {canCreate && (
+                <button
+                  onClick={handleCreate}
+                  className="inline-flex items-center rounded-lg border border-purple-500/40 bg-purple-600/20 px-4 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-400/60 hover:bg-purple-600/30"
+                >
+                  + Add New Manga
+                </button>
+              )}
             </div>
           </div>
 
