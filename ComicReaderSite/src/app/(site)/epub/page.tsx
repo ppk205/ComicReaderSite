@@ -5,6 +5,7 @@ import EpubUpload from '@/components/EpubUpload';
 import EpubCard from '@/components/EpubCard';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
+import epubApi from '@/services/epubApi';
 
 interface EpubBook {
   id: number;
@@ -27,7 +28,7 @@ export default function EpubLibraryPage() {
 
   const abortRef = useRef<AbortController | null>(null);
 
-  /** Load danh sách EPUB của user hiện tại (dùng api service) */
+  /** Load danh sách EPUB của user hiện tại (dùng epubApi service) */
   const fetchBooks = useCallback(async () => {
     if (!USER_ID) {
       setBooks([]);
@@ -45,7 +46,7 @@ export default function EpubLibraryPage() {
 
     try {
       // api.getUserEpubs tự gắn Authorization + baseURL
-      const data = (await api.getUserEpubs(USER_ID)) as EpubBook[];
+      const data = (await epubApi.getUserEpubs(USER_ID)) as EpubBook[];
       if (!controller.signal.aborted) {
         setBooks(Array.isArray(data) ? data : []);
       }
@@ -82,7 +83,7 @@ export default function EpubLibraryPage() {
   if (!USER_ID) {
     return (
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <h2 className="text-3xl text-slate-800 font-bold mb-4">My Epub Library</h2>
+        <h2 className="text-3xl text-white font-bold mb-4">My Epub Library</h2>
         <p className="text-slate-600">Please sign in to view and manage your EPUB library.</p>
       </main>
     );
@@ -91,7 +92,7 @@ export default function EpubLibraryPage() {
   /** Nếu đã đăng nhập */
   return (
     <main className="max-w-7xl mx-auto px-4 py-8">
-      <h2 className="text-4xl font-bold text-slate-900 mb-6 border-b pb-3">My Epub Library</h2>
+      <h2 className="text-4xl font-bold text-white mb-6 border-b pb-3">My Epub Library</h2>
 
       {/* Storage Status */}
       <div className="bg-purple-100 p-4 rounded-lg shadow mb-8">
@@ -116,12 +117,12 @@ export default function EpubLibraryPage() {
       <EpubUpload userId={String(USER_ID)} onUploadSuccess={fetchBooks} />
 
       {/* Book List */}
-      <h3 className="text-3xl font-bold text-slate-900 mt-10 mb-5">My Books ({books.length})</h3>
+      <h3 className="text-3xl font-bold text-white mt-10 mb-5">My Books ({books.length})</h3>
 
       {isLoading && <p className="text-center text-gray-600">Loading books...</p>}
       {!isLoading && error && <p className="text-center text-red-500">{error}</p>}
       {!isLoading && !error && books.length === 0 && (
-        <p className="text-center text-gray-600">You don't have any Epub books yet. Upload one!</p>
+        <p className="text-center text-gray-500">You don't have any Epub books yet. Upload one!</p>
       )}
       {!isLoading && !error && books.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
