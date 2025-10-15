@@ -7,6 +7,7 @@
     <groupId>reader.site</groupId>
     <artifactId>Comic</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <name>ComicDashboard</name>
     <packaging>war</packaging>
 
     <properties>
@@ -119,11 +120,15 @@
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.28.0</version>
+        </dependency>
 
     </dependencies>
 
     <build>
-        <finalName>Comic</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

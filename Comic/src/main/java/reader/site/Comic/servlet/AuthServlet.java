@@ -85,7 +85,10 @@ public class AuthServlet extends BaseServlet {
         writeJson(resp, new AuthResponse(token, user));
     }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4a1775bda2cabcb014c8931eb797d63f39bf69e1
     private void handleRegister(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         RegisterRequest registerRequest = readJson(resp, req, RegisterRequest.class);
         if (registerRequest == null) {
@@ -123,7 +126,10 @@ public class AuthServlet extends BaseServlet {
         writeJson(resp, new AuthResponse(token, created));
     }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4a1775bda2cabcb014c8931eb797d63f39bf69e1
     private void handleLogout(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String token = extractToken(req);
         if (token != null) {

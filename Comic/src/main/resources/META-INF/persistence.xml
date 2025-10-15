@@ -11,6 +11,8 @@
         <class>reader.site.Comic.entity.MangaEntity</class>
     <class>reader.site.Comic.entity.MangaChapterEntity</class>
         <class>reader.site.Comic.entity.ReadingHistoryEntity</class>
+        <class>reader.site.Comic.entity.ReadingHistoryEntity</class>
+	<class>reader.site.Comic.model.EpubBook</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
