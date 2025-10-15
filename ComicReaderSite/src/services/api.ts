@@ -11,6 +11,10 @@ class ApiService {
         this.baseUrl = baseUrl;
     }
 
+    get base() {
+        return this.baseUrl;
+    }
+
     // ✅ Helper: add token if exists
     private getAuthHeaders(): Record<string, string> {
         const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
@@ -210,6 +214,47 @@ class ApiService {
             return false;
         }
     }
+
+
+    async getPosts(query = '') {
+        const r = await fetch(`${this.base}/posts${query}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+    }
+
+    async getPostById(id: number) {
+        const r = await fetch(`${this.base}/posts/${id}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+    }
+
+    async createPost(data: any) {
+        const r = await fetch(`${this.base}/posts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+    }
+
+    async getComments(postId: number) {
+        const r = await fetch(`${this.base}/comments?postId=${postId}`);
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+    }
+
+    async createComment(data: any) {
+        const r = await fetch(`${this.base}/comments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+    }
+
+
 }
 
 export const apiService = new ApiService();
