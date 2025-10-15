@@ -1,85 +1,136 @@
 package reader.site.Comic.dao;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
-import org.bson.types.ObjectId;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import reader.site.Comic.entity.MangaChapterEntity;
+import reader.site.Comic.entity.MangaEntity;
 import reader.site.Comic.model.Manga;
+import reader.site.Comic.persistence.JPAUtil;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MangaDAO {
-    private static final String CONNECTION_STRING =
-            "mongodb+srv://23162037_db_user:PbL4JP0UUV7tygFp@comic.ytiwgxu.mongodb.net/Comic?retryWrites=true&w=majority&appName=Comic"; //=))) đừng có public repo giúp t
 
-    private static final String DATABASE_NAME = "Comic";
-    private static final String COLLECTION_NAME = "manga";
-
-    private final MongoClient mongoClient;
-    private final MongoDatabase database;
-    private final MongoCollection<Document> collection;
-
-    public MangaDAO() {
-        // connect to MongoDB Atlas
-        mongoClient = MongoClients.create(CONNECTION_STRING);
-        database = mongoClient.getDatabase(DATABASE_NAME);
-        collection = database.getCollection(COLLECTION_NAME);
-    }
-
-    // CREATE
     public Manga insert(Manga manga) {
-        Document doc = new Document("_id", new ObjectId())
-                .append("title", manga.getTitle())
-                .append("cover", manga.getCover())
-                .append("chapters", manga.getChapters());
-
-        collection.insertOne(doc);
-
-        manga.setId(doc.getObjectId("_id").toHexString());
-        return manga;
-    }
-
-    // READ ALL
-    public List<Manga> findAll() {
-        List<Manga> mangas = new ArrayList<>();
-        for (Document doc : collection.find()) {
-            mangas.add(fromDocument(doc));
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            MangaEntity entity = new MangaEntity();
+            entity.setTitle(manga.getTitle());
+            entity.setCover(manga.getCover());
+            entity.setChapters(manga.getChapters());
+            em.persist(entity);
+            em.getTransaction().commit();
+            manga.setId(String.valueOf(entity.getId()));
+            return manga;
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw ex;
+        } finally {
+            em.close();
         }
-        return mangas;
     }
 
-    // READ ONE
+    public List<Manga> findAll() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            TypedQuery<MangaEntity> query = em.createQuery("SELECT m FROM MangaEntity m", MangaEntity.class);
+            return query.getResultList().stream().map(this::toModel).collect(Collectors.toList());
+        } finally {
+            em.close();
+        }
+    }
+
     public Manga findById(String id) {
-        Document doc = collection.find(new Document("_id", new ObjectId(id))).first();
-        return doc != null ? fromDocument(doc) : null;
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            Long entityId = parseId(id);
+            if (entityId == null) {
+                return null;
+            }
+            MangaEntity entity = em.find(MangaEntity.class, entityId);
+            return entity != null ? toModel(entity) : null;
+        } finally {
+            em.close();
+        }
     }
 
-    // UPDATE
     public boolean update(String id, Manga manga) {
-        Document filter = new Document("_id", new ObjectId(id));
-        Document update = new Document("$set",
-                new Document("title", manga.getTitle())
-                        .append("cover", manga.getCover())
-                        .append("chapters", manga.getChapters()));
-
-        return collection.updateOne(filter, update).getModifiedCount() > 0;
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Long entityId = parseId(id);
+            if (entityId == null) {
+                em.getTransaction().rollback();
+                return false;
+            }
+            MangaEntity entity = em.find(MangaEntity.class, entityId);
+            if (entity == null) {
+                em.getTransaction().rollback();
+                return false;
+            }
+            entity.setTitle(manga.getTitle());
+            entity.setCover(manga.getCover());
+            entity.setChapters(manga.getChapters());
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw ex;
+        } finally {
+            em.close();
+        }
     }
 
-    // DELETE
     public boolean delete(String id) {
-        return collection.deleteOne(new Document("_id", new ObjectId(id))).getDeletedCount() > 0;
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Long entityId = parseId(id);
+            if (entityId == null) {
+                em.getTransaction().rollback();
+                return false;
+            }
+            MangaEntity entity = em.find(MangaEntity.class, entityId);
+            if (entity == null) {
+                em.getTransaction().rollback();
+                return false;
+            }
+            em.createQuery("DELETE FROM MangaChapterEntity c WHERE c.mangaId = :mangaId")
+                    .setParameter("mangaId", entityId)
+                    .executeUpdate();
+            em.remove(entity);
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw ex;
+        } finally {
+            em.close();
+        }
     }
 
-    // Helper: convert Mongo Document -> Manga object
-    private Manga fromDocument(Document doc) {
+    private Manga toModel(MangaEntity entity) {
         Manga manga = new Manga();
-        manga.setId(doc.getObjectId("_id").toHexString());
-        manga.setTitle(doc.getString("title"));
-        manga.setCover(doc.getString("cover"));
-        manga.setChapters((List<String>) doc.get("chapters"));
+        manga.setId(String.valueOf(entity.getId()));
+        manga.setTitle(entity.getTitle());
+        manga.setCover(entity.getCover());
+        manga.setChapters(entity.getChapters());
         return manga;
+    }
+
+    private Long parseId(String id) {
+        try {
+            return id != null ? Long.parseLong(id) : null;
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }

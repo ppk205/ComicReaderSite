@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import SearchBar from "@/components/SearchBar";
-import Link from "next/link";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { AppChrome } from "@/components/AppChrome";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,58 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Header */}
-        <header className="bg-purple-100 shadow-sm opacity-100">
-          <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
-            {/* Left: Logo */}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                <Link href="/">Manga Reader</Link>
-              </h1>
-              <p className="text-gray-600 mt-2">Discover and read your favorite manga</p>
-            </div>
-
-            {/* Right: Nav + Search */}
-            <div className="flex items-center gap-8">
-              <nav className="flex gap-6 items-center">
-                <a href="/list" className="text-2xl font-bold text-gray-900 hover:text-purple-600">
-                  List
-                </a>
-                <a href="/community" className="text-2xl font-bold text-gray-900 hover:text-purple-600">
-                  Community
-                </a>
-                <a href="/ranking" className="text-2xl font-bold text-gray-900 hover:text-purple-600">
-                  Ranking - Season
-                </a>
-              </nav>
-              <nav className="flex gap-6 items-center">
-                <a href="/bookmarks" className="text-2xl font-bold text-gray-900 hover:text-purple-600">
-                  Bookmarks
-                </a>
-              </nav>
-              {/* Search */}
-              <div className="flex items-center">
-                <SearchBar />
-              </div>
-              <nav className="flex gap-6 items-center">
-                <a href="/Login" className="text-1xl font-bold text-gray-900 hover:text-purple-600">
-                  Login
-                </a>
-              </nav>
-            </div>
-          </div>
-        </header>
-
-        {children}
-
-        {/* Footer */}
-        <footer className="bg-purple-100 shadow-sm opacity-100">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <h1 className="text-3xl font-bold text-gray-900 text-center">Manga Reader</h1>
-            <p className="text-gray-600 mt-2 text-center">Discover and read your favorite manga</p>
-          </div>
-        </footer>
-
+        <AuthProvider>
+          <AppChrome>{children}</AppChrome>
+        </AuthProvider>
       </body>
     </html>
   );
