@@ -27,56 +27,49 @@ export default function EpubLibraryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /** Load danh sách EPUB của user hiện tại */
+  const abortRef = useRef<AbortController | null>(null);
+
+  /** Load danh sách EPUB của user hiện tại (dùng api service) */
   const fetchBooks = useCallback(async () => {
     if (!USER_ID) {
-      console.log('[EPUB] Không có USER_ID, bỏ qua fetch');
+      setBooks([]);
+      setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     setError(null);
 
+    // Hủy request cũ (nếu có) trước khi tạo cái mới
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      const token =
-        typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-
-      console.log('[EPUB] Fetching books for user:', USER_ID, '| token:', !!token);
-
-      const res = await fetch(`${API_BASE}/epub/user/${USER_ID}`, {
-        cache: 'no-store',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-
-      if (!res.ok) {
-        let msg = res.statusText;
-        try {
-          const err = await res.json();
-          msg = err?.error || msg;
-        } catch {
-          /* ignore */
-        }
-        throw new Error(msg);
+      // api.getUserEpubs tự gắn Authorization + baseURL
+      const data = (await api.getUserEpubs(USER_ID)) as EpubBook[];
+      if (!controller.signal.aborted) {
+        setBooks(Array.isArray(data) ? data : []);
       }
-
-      const data: EpubBook[] = await res.json();
-      setBooks(data);
-      console.log('[EPUB] Fetched', data.length, 'books.');
     } catch (err: any) {
+      if (controller.signal.aborted) return;
       console.error('[EPUB] Lỗi khi tải sách:', err);
-      setError(err.message || 'Failed to load library. Please try again.');
+      setError(err?.message || 'Failed to load library. Please try again.');
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, [USER_ID]);
 
   /** Gọi fetchBooks khi có user */
   useEffect(() => {
     fetchBooks();
+    return () => abortRef.current?.abort();
   }, [fetchBooks]);
 
   /** Tính toán dung lượng đã dùng */
-  const totalUsedBytes = books.reduce((sum, b) => sum + b.fileSizeInBytes, 0);
+  const totalUsedBytes = books.reduce((sum, b) => sum + (b.fileSizeInBytes || 0), 0);
   const usedPercentage = (totalUsedBytes / STORAGE_LIMIT_BYTES) * 100;
 
   const formatBytes = (bytes: number) => {
@@ -91,10 +84,8 @@ export default function EpubLibraryPage() {
   if (!USER_ID) {
     return (
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <h2 className="text-3xl  text-white-600 font-bold mb-4">My Epub Library</h2>
-        <p className="text-white-600">
-          Please sign in to view and manage your EPUB library.
-        </p>
+        <h2 className="text-3xl text-slate-800 font-bold mb-4">My Epub Library</h2>
+        <p className="text-slate-600">Please sign in to view and manage your EPUB library.</p>
       </main>
     );
   }
@@ -102,9 +93,7 @@ export default function EpubLibraryPage() {
   /** Nếu đã đăng nhập */
   return (
     <main className="max-w-7xl mx-auto px-4 py-8">
-      <h2 className="text-4xl font-bold text-white-900 mb-6 border-b pb-3">
-        My Epub Library
-      </h2>
+      <h2 className="text-4xl font-bold text-slate-900 mb-6 border-b pb-3">My Epub Library</h2>
 
       {/* Storage Status */}
       <div className="bg-purple-100 p-4 rounded-lg shadow mb-8">
@@ -114,9 +103,7 @@ export default function EpubLibraryPage() {
         </p>
         <div className="w-full bg-gray-300 rounded-full h-4">
           <div
-            className={`h-4 rounded-full ${
-              usedPercentage < 80 ? 'bg-purple-600' : 'bg-red-500'
-            }`}
+            className={`h-4 rounded-full ${usedPercentage < 80 ? 'bg-purple-600' : 'bg-red-500'}`}
             style={{ width: `${Math.min(usedPercentage, 100)}%` }}
           />
         </div>
@@ -127,24 +114,16 @@ export default function EpubLibraryPage() {
         )}
       </div>
 
-      {/* Upload (giữ nguyên userId cũ để không ảnh hưởng backend) */}
+      {/* Upload */}
       <EpubUpload userId={String(USER_ID)} onUploadSuccess={fetchBooks} />
 
       {/* Book List */}
-      <h3 className="text-3xl font-bold text-white-900 mt-10 mb-5">
-        My Books ({books.length})
-      </h3>
+      <h3 className="text-3xl font-bold text-slate-900 mt-10 mb-5">My Books ({books.length})</h3>
 
-      {isLoading && (
-        <p className="text-center text-gray-600">Loading books...</p>
-      )}
-      {!isLoading && error && (
-        <p className="text-center text-red-500">{error}</p>
-      )}
+      {isLoading && <p className="text-center text-gray-600">Loading books...</p>}
+      {!isLoading && error && <p className="text-center text-red-500">{error}</p>}
       {!isLoading && !error && books.length === 0 && (
-        <p className="text-center text-gray-600">
-          You don't have any Epub books yet. Upload one!
-        </p>
+        <p className="text-center text-gray-600">You don't have any Epub books yet. Upload one!</p>
       )}
       {!isLoading && !error && books.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

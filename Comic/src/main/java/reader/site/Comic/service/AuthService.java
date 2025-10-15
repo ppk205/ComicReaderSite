@@ -43,7 +43,6 @@ public class AuthService {
 
         User updates = new User();
         updates.setLastLogin(user.getLastLogin());
-
         userDAO.update(user.getId(), updates);
 
         return user;

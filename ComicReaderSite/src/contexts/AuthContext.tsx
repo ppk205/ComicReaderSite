@@ -81,24 +81,6 @@ function normaliseAuthResponse(response: any): { token: string; user: User } {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [state, dispatch] = useReducer(authReducer, initialState);
-
-    // const login = async (credentials: LoginCredentials) => {
-    //     dispatch({ type: 'LOGIN_START' });
-    //     try {
-    //         // Prefer email if provided, otherwise fallback to username.
-    //         // Send object so apiService can normalise and backend receives "email" field.
-    //         const identifier = credentials.email;
-    //         const response = await apiService.login({ email: identifier, password: credentials.password });
-    //         const { token, user } = normaliseAuthResponse(response);
-    //         localStorage.setItem('authToken', token);
-    //         localStorage.setItem('user', JSON.stringify(user));
-    //         dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-    //     } catch (error) {
-    //         dispatch({ type: 'LOGIN_FAILURE' });
-    //         throw error;
-    //     }
-    // };
-
     const login = async (credentials: LoginCredentials) => {
         dispatch({ type: 'LOGIN_START' });
         try {

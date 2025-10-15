@@ -86,7 +86,6 @@ public class AuthServlet extends BaseServlet {
         String token = authService.issueToken(user);
         writeJson(resp, new AuthResponse(token, user));
     }
-
     private void handleRegister(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         RegisterRequest registerRequest = readJson(resp, req, RegisterRequest.class);
         if (registerRequest == null) {

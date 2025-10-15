@@ -39,11 +39,18 @@ body {
   margin-top: 0px;  
 }
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> a9487e905f09f4804b416f986e229820b2282586
 .search-bar:focus {
   outline: none;
   border-color: #b108ff;
   box-shadow: 0 0 6px rgba(126, 34, 206, 0.5);
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> a9487e905f09f4804b416f986e229820b2282586
