@@ -11,16 +11,15 @@ class ApiService {
         this.baseUrl = baseUrl;
     }
 
-    // Helper method to get auth headers
+    // ✅ Helper: add token if exists
     private getAuthHeaders(): Record<string, string> {
         const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-        if (token) {
-            return { Authorization: `Bearer ${token}` };
-        }
-        return {};
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        return headers;
     }
 
-    // Generic fetch method
+    // ✅ Generic fetch method (your provided code + safe merge)
     private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
         const normalisedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
         const url = `${this.baseUrl}${normalisedEndpoint}`;
@@ -28,14 +27,11 @@ class ApiService {
         const authHeaders = this.getAuthHeaders();
         const mergedHeaders: Record<string, string> = { ...authHeaders };
 
+        // Merge user headers if any
         if (options.headers instanceof Headers) {
-            options.headers.forEach((value, key) => {
-                mergedHeaders[key] = value;
-            });
+            options.headers.forEach((value, key) => (mergedHeaders[key] = value));
         } else if (Array.isArray(options.headers)) {
-            options.headers.forEach(([key, value]) => {
-                mergedHeaders[key] = value;
-            });
+            options.headers.forEach(([key, value]) => (mergedHeaders[key] = value));
         } else if (options.headers) {
             Object.assign(mergedHeaders, options.headers as Record<string, string>);
         }
@@ -48,16 +44,19 @@ class ApiService {
         try {
             const response = await fetch(url, {
                 ...options,
-                headers: {
-                    ...mergedHeaders,
-                },
+                headers: mergedHeaders,
             });
 
             if (!response.ok) {
-                // try to parse error body for better message
+                // Try to parse error message if available
                 let errBody = null;
-                try { errBody = await response.json(); } catch {}
-                const msg = errBody && errBody.message ? errBody.message : `HTTP error! status: ${response.status}`;
+                try {
+                    errBody = await response.json();
+                } catch {}
+                const msg =
+                    errBody && errBody.message
+                        ? errBody.message
+                        : `HTTP error! status: ${response.status}`;
                 throw new Error(msg);
             }
 
@@ -68,10 +67,9 @@ class ApiService {
 
             const contentType = response.headers.get('content-type') || '';
             if (contentType.includes('application/json')) {
-                return await response.json();
+                return (await response.json()) as T;
             }
 
-            // Fallback for non-JSON responses
             const text = await response.text();
             return text as unknown as T;
         } catch (error) {
@@ -98,6 +96,7 @@ class ApiService {
         // always send as "email" so backend's LoginRequest.email is populated
         return this.request('/auth/login', {
             method: 'POST',
+            credentials: "include",
             body: JSON.stringify({ email: identifier, password }),
         });
     }

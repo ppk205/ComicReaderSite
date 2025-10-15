@@ -1,16 +1,20 @@
 package reader.site.Comic.dao;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpSession;
 import reader.site.Comic.entity.UserEntity;
 import reader.site.Comic.entity.UserRoleEntity;
 import reader.site.Comic.model.User;
@@ -20,8 +24,10 @@ import reader.site.Comic.util.PasswordUtil;
 public class UserDAO {
     private final RoleDAO roleDAO = new RoleDAO();
 
+
+
     public UserDAO() {
-        seedDefaults();
+//        seedDefaults();
     }
 
     public List<User> findAll(int page, int limit, String search, String roleName, String status) {
@@ -99,6 +105,9 @@ public class UserDAO {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             UserEntity entity = em.find(UserEntity.class, id);
+            if (entity != null) {
+                em.refresh(entity); // 💥 ép EntityManager đọc dữ liệu mới nhất từ DB
+            }
             return Optional.ofNullable(entity).map(this::toModel);
         } finally {
             em.close();
@@ -169,6 +178,8 @@ public class UserDAO {
             em.getTransaction().commit();
             return toModel(entity);
         } catch (Exception ex) {
+            ex.printStackTrace();
+
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
@@ -228,7 +239,7 @@ public class UserDAO {
             }
         }
 
-        entity.setStatus(source.getStatus() != null ? source.getStatus() : "active");
+        entity.setStatus(source.getStatus() != null ? source.getStatus() : "pending");
         if (source.getCreatedAt() != null) {
             entity.setCreatedAt(parseInstant(source.getCreatedAt()));
         }
@@ -373,4 +384,114 @@ public class UserDAO {
             return null;
         }
     }
+
+    // ✅ Tạo token kích hoạt
+    public String generateActivationToken(String userId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            UserEntity user = em.find(UserEntity.class, userId);
+            if (user == null) return null;
+
+            String token = UUID.randomUUID().toString();
+            user.setActivationToken(token);
+            user.setStatus("pending"); // chờ kích hoạt
+            em.merge(user);
+            em.getTransaction().commit();
+            return token;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    // ✅ Kích hoạt tài khoản
+    public static boolean activateUser(String token) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            TypedQuery<UserEntity> q = em.createQuery(
+                    "SELECT u FROM UserEntity u WHERE u.activationToken = :token", UserEntity.class);
+            q.setParameter("token", token);
+
+            UserEntity user = q.getSingleResult();
+            if (user == null) return false;
+
+            user.setStatus("active"); // đổi sang active
+            user.setActivationToken(null);
+            em.merge(user);
+            em.getTransaction().commit();
+            return true;
+        } catch (NoResultException e) {
+            return false;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    // ✅ Tạo token reset mật khẩu
+    public String generateResetToken(String email) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            TypedQuery<UserEntity> q = em.createQuery(
+                    "SELECT u FROM UserEntity u WHERE u.email = :email", UserEntity.class);
+            q.setParameter("email", email);
+
+            UserEntity user = q.getSingleResult();
+            if (user == null) return null;
+
+            String token = UUID.randomUUID().toString();
+            Instant expiry = Instant.now().plus(8, ChronoUnit.HOURS);
+            user.setResetToken(token);
+            user.setResetTokenExpiry(expiry);
+            em.merge(user);
+            em.getTransaction().commit();
+            return token;
+        } catch (NoResultException e) {
+            return null;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    // ✅ Reset mật khẩu bằng token
+    public static boolean resetPassword(String token, String newPassword) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            TypedQuery<UserEntity> q = em.createQuery(
+                    "SELECT u FROM UserEntity u WHERE u.resetToken = :token AND u.resetTokenExpiry > :now",
+                    UserEntity.class);
+            q.setParameter("token", token);
+            q.setParameter("now", Instant.now());
+
+            UserEntity user = q.getSingleResult();
+            if (user == null) return false;
+
+            String hashed = PasswordUtil.hash(newPassword);
+            user.setPassword(hashed);
+            user.setResetToken(null);
+            user.setResetTokenExpiry(null);
+            em.merge(user);
+            em.getTransaction().commit();
+            return true;
+        } catch (NoResultException e) {
+            return false;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
 }

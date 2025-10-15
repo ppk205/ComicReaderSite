@@ -1,5 +1,7 @@
 package reader.site.Comic.model;
 
+import java.time.Instant;
+
 public class User {
     private String id;
     private String username;
@@ -12,6 +14,35 @@ public class User {
     private String lastLogin;
     private String avatar;
     private String bio;
+    private transient Instant resetTokenExpiry;
+
+    public Instant getResetTokenExpiry() {
+        return resetTokenExpiry;
+    }
+
+    public void setResetTokenExpiry(Instant resetTokenExpiry) {
+        this.resetTokenExpiry = resetTokenExpiry;
+    }
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
+
+    public String getActivationToken() {
+        return activationToken;
+    }
+
+    public void setActivationToken(String activationToken) {
+        this.activationToken = activationToken;
+    }
+
+    private String resetToken;
+    private String activationToken;
+
 
     public User() {}
 
@@ -25,7 +56,10 @@ public class User {
                 String updatedAt,
                 String lastLogin,
                 String avatar,
-                String bio) {
+                String bio,
+                String activationToken,
+                Instant resetTokenExpiry,
+                String resetToken) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -37,6 +71,9 @@ public class User {
         this.lastLogin = lastLogin;
         this.avatar = avatar;
         this.bio = bio;
+        this.activationToken = activationToken;
+        this.resetTokenExpiry = resetTokenExpiry;
+        this.resetToken = resetToken;
     }
 
     public String getId() {

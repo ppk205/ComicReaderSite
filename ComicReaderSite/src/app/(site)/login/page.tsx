@@ -109,6 +109,12 @@ export default function Login() {
                         </button>
                     </div>
 
+                    <div className="text-center mt-2">
+                        <a href="/forgot-password" style={{ color: '#A78BFA' }} className="hover:opacity-90 text-sm">
+                            Forgot your password?
+                        </a>
+                    </div>
+
                     <div className="text-center mt-4">
                         <a href="/register" style={{ color: '#D8B4FE' }} className="hover:opacity-90 text-sm">
                             Don't have an account? Register
