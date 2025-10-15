@@ -23,25 +23,26 @@ export default function MangaPage({ params }: { params: { id: string } }) {
     }, [id]);
 
     return (
-        <div className="max-w-4xl mx-auto p-6 font-sans">
+        <div className="max-w-4xl mx-auto p-6 font-sans bg-[#0b0b12] text-[#f3f0ff] rounded-2xl border border-[#3b3b5c] mt-8">
             {manga && (
-                <header className="border-b pb-3 mb-4">
-                    <h1 className="text-2xl font-bold text-sky-700">{manga.title}</h1>
-                    <Link href="/community/posts/create" className="text-sky-500 hover:underline text-sm">
-                        ✍️ Viết bài cho manga này
+                <header className="border-b border-[#3b3b5c] pb-3 mb-4">
+                    <h1 className="text-2xl font-bold text-[#c4b5fd]">{manga.title}</h1>
+                    <Link href="/community/posts/create" className="text-[#a78bfa] hover:underline text-sm">
+                        ✍️ Write a post for this manga
                     </Link>
                 </header>
             )}
+
             <section>
-                <h2 className="text-xl font-semibold text-sky-700 mb-3">Bài viết liên quan</h2>
-                {posts.length === 0 && <p className="text-sky-600 italic">Chưa có bài viết nào.</p>}
+                <h2 className="text-xl font-semibold text-[#c4b5fd] mb-3">Related Posts</h2>
+                {posts.length === 0 && <p className="text-gray-400 italic">No posts found.</p>}
                 <ul className="space-y-3">
                     {posts.map((p) => (
-                        <li key={p.id} className="border rounded-lg p-3 bg-white hover:bg-sky-50 shadow-sm">
-                            <Link href={`/community/posts/${p.id}`} className="font-semibold text-sky-800">
+                        <li key={p.id} className="border border-[#3b3b5c] rounded-lg p-3 bg-[#1a1a29] hover:bg-[#252537] shadow-sm transition">
+                            <Link href={`/community/posts/${p.id}`} className="font-semibold text-[#d0bfff]">
                                 {p.title}
                             </Link>
-                            <p className="text-sm text-sky-600 line-clamp-2">{p.content?.slice(0, 120)}</p>
+                            <p className="text-sm text-gray-400 line-clamp-2">{p.content?.slice(0, 120)}</p>
                         </li>
                     ))}
                 </ul>

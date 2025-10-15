@@ -1,3 +1,5 @@
+import { User } from "@/types/auth";
+
 // API Service for communicating with Tomcat backend
 const DEFAULT_API_BASE_URL = 'https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/api';
 
@@ -151,7 +153,7 @@ class ApiService {
         // always send as "email" so backend's LoginRequest.email is populated
         return this.request('/auth/login', {
             method: 'POST',
-            credentials: 'include',
+            // credentials: 'include',
             body: JSON.stringify({ email: identifier, password }),
         });
     }
@@ -162,9 +164,9 @@ class ApiService {
             method: 'POST',
         });
     }
-    
-    async getCurrentUser() {
-        return this.request('/auth/me');
+
+    async getCurrentUser(): Promise<User | null> {
+        return this.request<User>("/auth/me");
     }
 
     // Register endpoint (matches /api/auth/register on backend)
