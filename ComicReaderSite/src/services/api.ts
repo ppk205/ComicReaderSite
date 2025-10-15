@@ -1,7 +1,8 @@
 // API Service for communicating with Tomcat backend
 // Prefer local env in development. If NEXT_PUBLIC_API_BASE is not set,
 // fallback to localhost so local dev doesn't call production by accident.
-const DEFAULT_API_BASE_URL = 'https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/api';
+const DEFAULT_API_BASE_URL =
+  "https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/api";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || DEFAULT_API_BASE_URL;
