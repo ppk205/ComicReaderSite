@@ -1,231 +1,183 @@
-"use client";
+package reader.site.Comic.dao;
 
-import { useEffect, useState } from "react";
-import MangaCard from "@/components/MangaCard";
-import { apiService } from "@/services/api";
+import java.util.List;
+import java.util.stream.Collectors;
 
-type BookmarkItem = {
-  mangaId: string;
-  mangaTitle: string;
-  mangaCover?: string;
-  id?: string | number | null;
-  currentChapter?: number | null;
-  totalChapters?: number | null;
-  readingProgress?: number | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-};
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import reader.site.Comic.entity.BookmarkEntity;
+import reader.site.Comic.entity.MangaEntity;
+import reader.site.Comic.entity.UserEntity;
+import reader.site.Comic.model.Bookmark;
+import reader.site.Comic.persistence.JPAUtil;
 
-export default function BookmarksPage() {
-  const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<
-    "all" | "unread" | "inprogress" | "completed"
-  >("all");
+public class BookmarkDAO {
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const result = await apiService.getBookmarks();
-        if (cancelled) return;
-
-        if (Array.isArray(result) && result.length > 0) {
-          // normalize items (preserve bookmark metadata)
-          const items = result.map((it: any) => ({
-            mangaId: String(it.mangaId ?? it.id ?? it.manga?.id ?? ""),
-            mangaTitle: String(it.title ?? it.manga?.title ?? "Untitled"),
-            mangaCover: it.cover ?? it.manga?.cover,
-            id: it.id ?? null,
-            currentChapter: it.currentChapter ?? it.current_chapter ?? null,
-            totalChapters: it.totalChapters ?? it.total_chapters ?? null,
-            readingProgress: it.readingProgress ?? it.reading_progress ?? null,
-            createdAt: it.createdAt ?? it.created_at ?? null,
-            updatedAt: it.updatedAt ?? it.updated_at ?? null,
-          }));
-          setBookmarks(items);
-          setError(null);
-        } else {
-          // No server bookmarks found for this user. Try localStorage as optional fallback.
-          try {
-            const raw = localStorage.getItem("bookmarks");
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              if (Array.isArray(parsed)) {
-                const items = parsed.map((it: any) => ({
-                  mangaId: String(it.mangaId ?? it.id ?? ""),
-                  mangaTitle: it.title ?? it.mangaTitle ?? "Untitled",
-                  mangaCover: it.cover ?? it.mangaCover,
-                  id: it.id ?? null,
-                  currentChapter:
-                    it.currentChapter ?? it.current_chapter ?? null,
-                  totalChapters: it.totalChapters ?? it.total_chapters ?? null,
-                  readingProgress:
-                    it.readingProgress ?? it.reading_progress ?? null,
-                  createdAt: it.createdAt ?? it.created_at ?? null,
-                  updatedAt: it.updatedAt ?? it.updated_at ?? null,
-                }));
-                setBookmarks(items);
-                setError(null);
-              }
-            }
-          } catch (e) {
-            // ignore
-          }
-        }
-      } catch (err: any) {
-        // fallback to localStorage on error
-        // fallback to localStorage or built-in sample data
-        let items: BookmarkItem[] = [];
+    public Bookmark saveOrUpdate(String userId, Long mangaId, String title, String cover, Integer currentChapter, Integer totalChapters, Double readingProgress) {
+        EntityManager em = JPAUtil.getEntityManager();
         try {
-          const raw = localStorage.getItem("bookmarks");
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-              items = parsed.map((it: any) => ({
-                mangaId: String(it.mangaId ?? it.id ?? ""),
-                mangaTitle: it.mangaTitle ?? it.title ?? "Untitled",
-                mangaCover: it.mangaCover ?? it.cover,
-                id: it.id ?? null,
-                currentChapter: it.currentChapter ?? it.current_chapter ?? null,
-                totalChapters: it.totalChapters ?? it.total_chapters ?? null,
-                readingProgress:
-                  it.readingProgress ?? it.reading_progress ?? null,
-                createdAt: it.createdAt ?? it.created_at ?? null,
-                updatedAt: it.updatedAt ?? it.updated_at ?? null,
-              }));
-            }
-          }
-        } catch (e) {
-          // ignore
-        }
+            em.getTransaction().begin();
 
-        // If server call fails and localStorage had no data, surface the error to the user.
-        setBookmarks(items);
-        setError(err?.message ?? "Failed to load bookmarks from server");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+            TypedQuery<BookmarkEntity> query = em.createQuery(
+                    "SELECT b FROM BookmarkEntity b WHERE b.user.id = :userId AND b.manga.id = :mangaId",
+                    BookmarkEntity.class
+            );
+            query.setParameter("userId", userId);
+            query.setParameter("mangaId", mangaId);
+
+            List<BookmarkEntity> results = query.getResultList();
+            BookmarkEntity entity;
+
+            if (!results.isEmpty()) {
+                entity = results.get(0);
+                entity.setTitle(title);
+                entity.setCover(cover);
+                entity.setCurrentChapter(currentChapter);
+                entity.setTotalChapters(totalChapters);
+                entity.setReadingProgress(readingProgress);
+            } else {
+                entity = new BookmarkEntity();
+                UserEntity user = em.find(UserEntity.class, userId);
+                MangaEntity manga = em.find(MangaEntity.class, mangaId);
+                if (user == null || manga == null) {
+                    em.getTransaction().rollback();
+                    return null;
+                }
+                entity.setUser(user);
+                entity.setManga(manga);
+                entity.setTitle(title);
+                entity.setCover(cover);
+                entity.setCurrentChapter(currentChapter);
+                entity.setTotalChapters(totalChapters);
+                entity.setReadingProgress(readingProgress);
+                em.persist(entity);
+            }
+
+            em.getTransaction().commit();
+
+            Bookmark model = new Bookmark();
+            model.setMangaId(String.valueOf(entity.getManga().getId()));
+            model.setTitle(entity.getTitle());
+            model.setCover(entity.getCover());
+            model.setCurrentChapter(entity.getCurrentChapter());
+            // If totalChapters stored in entity is null, try to compute from manga_chapters table
+            Integer tc = entity.getTotalChapters();
+            if (tc == null) {
+                tc = computeTotalChapters(em, entity.getManga().getId());
+            }
+            model.setTotalChapters(tc);
+            model.setReadingProgress(entity.getReadingProgress());
+            // Optionally include id and timestamps if needed by frontend
+            try {
+                model.getClass().getMethod("setId", String.class).invoke(model, String.valueOf(entity.getId()));
+            } catch (ReflectiveOperationException | IllegalArgumentException e) {
+                // model may not have id setter (older DTO); ignore if not present
+            }
+            try {
+                java.time.LocalDateTime ca = entity.getCreatedAt();
+                java.time.LocalDateTime ua = entity.getUpdatedAt();
+                java.lang.reflect.Method mca = model.getClass().getMethod("setCreatedAt", String.class);
+                java.lang.reflect.Method mua = model.getClass().getMethod("setUpdatedAt", String.class);
+                if (ca != null) mca.invoke(model, formatDateTime(ca));
+                if (ua != null) mua.invoke(model, formatDateTime(ua));
+            } catch (ReflectiveOperationException | IllegalArgumentException e) {
+                // ignore if model doesn't have these methods
+            }
+            return model;
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw ex;
+        } finally {
+            em.close();
+        }
     }
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    public List<Bookmark> findByUserId(String userId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            TypedQuery<BookmarkEntity> query = em.createQuery(
+                    "SELECT b FROM BookmarkEntity b WHERE b.user.id = :userId ORDER BY b.updatedAt DESC",
+                    BookmarkEntity.class
+            );
+            query.setParameter("userId", userId);
+            return query.getResultList().stream().map(entity -> {
+                // Defensive: skip malformed rows where user or manga is null
+                if (entity.getManga() == null || entity.getUser() == null) {
+                    return null;
+                }
+                Bookmark m = new Bookmark();
+                Long mangaId = entity.getManga().getId();
+                m.setMangaId(mangaId != null ? String.valueOf(mangaId) : null);
+                m.setTitle(entity.getTitle());
+                m.setCover(entity.getCover());
+                m.setCurrentChapter(entity.getCurrentChapter());
+                Integer tc = entity.getTotalChapters();
+                if (tc == null) {
+                    tc = computeTotalChapters(em, entity.getManga().getId());
+                }
+                m.setTotalChapters(tc);
+                m.setReadingProgress(entity.getReadingProgress());
+                // populate optional id/timestamps if model supports them
+                try {
+                    m.getClass().getMethod("setId", String.class).invoke(m, String.valueOf(entity.getId()));
+                } catch (ReflectiveOperationException | IllegalArgumentException e) {}
+                try {
+                    java.time.LocalDateTime ca = entity.getCreatedAt();
+                    java.time.LocalDateTime ua = entity.getUpdatedAt();
+                    java.lang.reflect.Method mca = m.getClass().getMethod("setCreatedAt", String.class);
+                    java.lang.reflect.Method mua = m.getClass().getMethod("setUpdatedAt", String.class);
+                    if (ca != null) mca.invoke(m, formatDateTime(ca));
+                    if (ua != null) mua.invoke(m, formatDateTime(ua));
+                } catch (ReflectiveOperationException | IllegalArgumentException e) {}
+                return m;
+            }).filter(b -> b != null).collect(Collectors.toList());
+        } finally {
+            em.close();
+        }
+    }
 
-  if (loading) return <p className="text-white">Loading...</p>;
-  if (error) return <p className="text-red-500">Error: {error}</p>;
+    // Helper: compute total chapters by querying manga_chapters for the manga id. Returns null if none found.
+    private Integer computeTotalChapters(EntityManager em, Long mangaId) {
+        if (mangaId == null) return null;
+        try {
+            // find the maximum chapter_number for this manga
+            TypedQuery<Integer> q = em.createQuery(
+                    "SELECT MAX(c.chapterNumber) FROM MangaChapterEntity c WHERE c.mangaId = :mangaId",
+                    Integer.class
+            );
+            q.setParameter("mangaId", mangaId);
+            Integer max = q.getSingleResult();
+            return max;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
 
-  return (
-    <div className="min-h-screen bg-gray-950">
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-purple-400 mb-6">Bookmarks</h1>
-        {/* Dev helpers removed - page now loads real bookmarks from backend */}
-        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <input
-            type="text"
-            placeholder="Search bookmarks by title..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full sm:w-80 px-3 py-2 rounded bg-gray-800 text-white border border-gray-700"
-          />
+    private String formatDateTime(java.time.LocalDateTime dateTime) {
+        return dateTime != null ? java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(dateTime) : null;
+    }
 
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
-            className="px-3 py-2 rounded bg-gray-800 text-white border border-gray-700"
-          >
-            <option value="all">All</option>
-            <option value="unread">Unread</option>
-            <option value="inprogress">In progress</option>
-            <option value="completed">Completed</option>
-          </select>
-
-          <button
-            onClick={() => {
-              setQuery("");
-              setFilter("all");
-            }}
-            className="px-3 py-2 rounded bg-gray-700 text-white border border-gray-600"
-          >
-            Reset
-          </button>
-        </div>
-
-        {(() => {
-          const q = query.trim().toLowerCase();
-          const filtered = bookmarks.filter((bm) => {
-            // match title
-            if (
-              q &&
-              !(bm.mangaTitle ?? bm.mangaTitle ?? "").toLowerCase().includes(q)
-            )
-              return false;
-
-            if (filter === "unread") {
-              return bm.currentChapter == null || bm.currentChapter === 0;
+    public boolean delete(Long id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            BookmarkEntity entity = em.find(BookmarkEntity.class, id);
+            if (entity == null) {
+                em.getTransaction().rollback();
+                return false;
             }
-            if (filter === "inprogress") {
-              return (
-                bm.currentChapter != null &&
-                bm.totalChapters != null &&
-                bm.totalChapters > 0 &&
-                bm.currentChapter < bm.totalChapters
-              );
-            }
-            if (filter === "completed") {
-              return (
-                bm.currentChapter != null &&
-                bm.totalChapters != null &&
-                bm.totalChapters > 0 &&
-                bm.currentChapter >= bm.totalChapters
-              );
-            }
+            em.remove(entity);
+            em.getTransaction().commit();
             return true;
-          });
-
-          if (filtered.length === 0) {
-            return <p className="text-gray-400">No bookmarks found.</p>;
-          }
-
-          return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((bm: any) => (
-                <MangaCard
-                  key={bm.mangaId}
-                  manga={{
-                    id: bm.mangaId,
-                    title: bm.title ?? bm.mangaTitle,
-                    cover: bm.cover ?? bm.mangaCover,
-                    chapters: bm.totalChapters
-                      ? Array.from({ length: bm.totalChapters }).map(
-                          (_, i) => ({
-                            id: String(i + 1),
-                            title: `Chapter ${i + 1}`,
-                          })
-                        )
-                      : undefined,
-                  }}
-                  bookmark={{
-                    bookmarkId: bm.id ?? undefined,
-                    bookmarked: true,
-                    currentChapter: bm.currentChapter ?? null,
-                    totalChapters: bm.totalChapters ?? null,
-                    readingProgress: bm.readingProgress ?? null,
-                    createdAt: bm.createdAt ?? bm.created_at ?? null,
-                    updatedAt: bm.updatedAt ?? bm.updated_at ?? null,
-                  }}
-                />
-              ))}
-            </div>
-          );
-        })()}
-      </main>
-    </div>
-  );
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw ex;
+        } finally {
+            em.close();
+        }
+    }
 }

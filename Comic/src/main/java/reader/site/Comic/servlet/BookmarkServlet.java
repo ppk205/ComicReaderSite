@@ -1,96 +1,143 @@
-package reader.site.Comic.entity;
+package reader.site.Comic.servlet;
 
-import java.time.LocalDateTime;
+import java.io.IOException;
+import java.util.List;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import reader.site.Comic.dao.BookmarkDAO;
+import reader.site.Comic.dao.RoleDAO;
+import reader.site.Comic.dao.UserDAO;
+import reader.site.Comic.model.Bookmark;
+import reader.site.Comic.model.User;
+import reader.site.Comic.service.AuthService;
+import reader.site.Comic.service.TokenService;
 
-@Entity
-@Table(name = "bookmarks")
-public class BookmarkEntity {
+@WebServlet("/api/bookmarks/*")
+public class BookmarkServlet extends BaseServlet {
+    private BookmarkDAO bookmarkDAO;
+    private AuthService authService;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manga_id", nullable = false)
-    private MangaEntity manga;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @Column(name = "title", length = 255)
-    private String title;
-
-    @Column(name = "cover", length = 512)
-    private String cover;
-
-    @Column(name = "current_chapter")
-    private Integer currentChapter;
-
-    @Column(name = "total_chapters")
-    private Integer totalChapters;
-
-    @Column(name = "reading_progress")
-    private Double readingProgress;
-
-    @PrePersist
-    public void prePersist() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
+    @Override
+    public void init() throws ServletException {
+        bookmarkDAO = new BookmarkDAO();
+        authService = new AuthService(new UserDAO(), new RoleDAO(), new TokenService());
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // Development helper: if caller provides ?devUser=<userId>, return that user's bookmarks
+        String devUser = req.getParameter("devUser");
+        if (devUser != null && !devUser.isBlank()) {
+            try {
+                List<Bookmark> bookmarks = bookmarkDAO.findByUserId(devUser);
+                writeJson(resp, bookmarks);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                String detail = ex.toString();
+                StackTraceElement[] stack = ex.getStackTrace();
+                if (stack != null && stack.length > 0) {
+                    detail += " at " + stack[0].toString();
+                }
+                writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching bookmarks: " + detail);
+            }
+            return;
+        }
+
+        User user = getAuthenticatedUser(req);
+        if (user == null) {
+            writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
+        }
+
+        try {
+            List<Bookmark> bookmarks = bookmarkDAO.findByUserId(user.getId());
+            writeJson(resp, bookmarks);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            // Development-time: include exception detail to help debugging
+            String detail = ex.toString();
+            StackTraceElement[] stack = ex.getStackTrace();
+            if (stack != null && stack.length > 0) {
+                detail += " at " + stack[0].toString();
+            }
+            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching bookmarks: " + detail);
+        }
     }
 
-    // getters and setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // Accept Bookmarks payload and persist for authenticated user
+        User user = getAuthenticatedUser(req);
+        if (user == null) {
+            writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
+        }
 
-    public UserEntity getUser() { return user; }
-    public void setUser(UserEntity user) { this.user = user; }
+        Bookmark payload = readJson(resp, req, Bookmark.class);
+        if (payload == null) return;
 
-    public MangaEntity getManga() { return manga; }
-    public void setManga(MangaEntity manga) { this.manga = manga; }
+        try {
+            String userId = user.getId();
+            Long mangaId = payload.getMangaId() != null ? Long.parseLong(payload.getMangaId()) : null;
+            Bookmark saved = bookmarkDAO.saveOrUpdate(
+                    userId,
+                    mangaId,
+                    payload.getTitle(),
+                    payload.getCover(),
+                    payload.getCurrentChapter(),
+                    payload.getTotalChapters(),
+                    payload.getReadingProgress()
+            );
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+            writeJson(resp, saved);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            String detail = ex.toString();
+            StackTraceElement[] stack = ex.getStackTrace();
+            if (stack != null && stack.length > 0) {
+                detail += " at " + stack[0].toString();
+            }
+            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error saving bookmark: " + detail);
+        }
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        User user = getAuthenticatedUser(req);
+        if (user == null) {
+            writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
+        }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Bookmark id required");
+            return;
+        }
 
-    public String getCover() { return cover; }
-    public void setCover(String cover) { this.cover = cover; }
+        try {
+            String idStr = pathInfo.substring(1);
+            boolean deleted = bookmarkDAO.delete(Long.parseLong(idStr));
+            if (deleted) {
+                setCorsHeaders(resp);
+                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            } else {
+                writeError(resp, HttpServletResponse.SC_NOT_FOUND, "Bookmark not found");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error deleting bookmark");
+        }
+    }
 
-    public Integer getCurrentChapter() { return currentChapter; }
-    public void setCurrentChapter(Integer currentChapter) { this.currentChapter = currentChapter; }
-
-    public Integer getTotalChapters() { return totalChapters; }
-    public void setTotalChapters(Integer totalChapters) { this.totalChapters = totalChapters; }
-
-    public Double getReadingProgress() { return readingProgress; }
-    public void setReadingProgress(Double readingProgress) { this.readingProgress = readingProgress; }
+    private User getAuthenticatedUser(HttpServletRequest req) {
+        String header = req.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            header = header.substring(7);
+        }
+        return authService.resolveToken(header);
+    }
 }
