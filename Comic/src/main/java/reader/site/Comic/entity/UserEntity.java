@@ -33,9 +33,6 @@ public class UserEntity {
     @JoinColumn(name = "role_id", nullable = false)
     private UserRoleEntity role;
 
-    @Column(length = 32)
-    private String status;
-
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -62,6 +59,9 @@ public class UserEntity {
         }
         updatedAt = now;
     }
+
+    @Column(name = "status", nullable = false)
+    private String status = "active"; // default value
 
     @PreUpdate
     public void onUpdate() {
@@ -155,4 +155,29 @@ public class UserEntity {
     public void setBio(String bio) {
         this.bio = bio;
     }
+
+    @Column(name = "activation_token")
+    private String activationToken;
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private Instant resetTokenExpiry;
+
+
+
+    // --- getters & setters ---
+    public String getActivationToken() { return activationToken; }
+    public void setActivationToken(String activationToken) { this.activationToken = activationToken; }
+
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
+    public Instant getResetTokenExpiry() { return resetTokenExpiry; }
+    public void setResetTokenExpiry(Instant resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
+
+
+
+
 }

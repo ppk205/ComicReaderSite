@@ -33,10 +33,18 @@ public abstract class BaseServlet extends HttpServlet {
     }
 
     protected void writeJson(HttpServletResponse resp, Object payload) throws IOException {
-        setCorsHeaders(resp);
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-        resp.getWriter().write(GSON.toJson(payload));
+        try {
+            setCorsHeaders(resp);
+            resp.setContentType("application/json");
+            resp.setCharacterEncoding("UTF-8");
+            String json = GSON.toJson(payload);
+            resp.getWriter().write(json);
+            resp.getWriter().flush(); // đảm bảo ghi xong
+        } catch (Exception e) {
+            e.printStackTrace(); // in lỗi thật trong Tomcat
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write("{\"error\":\"Failed to write JSON: " + e.getClass().getSimpleName() + " - " + e.getMessage() + "\"}");
+        }
     }
 
     protected void writeError(HttpServletResponse resp, int status, String message) throws IOException {

@@ -13,6 +13,7 @@ import reader.site.Comic.model.User;
 import reader.site.Comic.model.UserRole;
 import reader.site.Comic.service.AuthService;
 import reader.site.Comic.service.TokenService;
+import reader.site.Comic.util.EmailUtil;
 
 import java.io.IOException;
 
@@ -29,7 +30,6 @@ public class AuthServlet extends BaseServlet {
         this.roleDAO = new RoleDAO();
         this.tokenService = new TokenService();
         this.authService = new AuthService(userDAO, roleDAO, tokenService);
-        this.roleDAO = roleDAO;
     }
 
     @Override
@@ -69,6 +69,8 @@ public class AuthServlet extends BaseServlet {
         }
 
         String identifier = loginRequest.getEmail();
+        System.out.println("getEmail after update: " + loginRequest.getEmail());
+        System.out.println("getPassword after update: " + loginRequest.getPassword());
         if (identifier == null || identifier.isBlank() ||
                 loginRequest.getPassword() == null || loginRequest.getPassword().isBlank()) {
             writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "email and password are required");
@@ -119,9 +121,13 @@ public class AuthServlet extends BaseServlet {
             newUser.setRole(defaultRole);
         }
 
-        User created = userDAO.create(newUser);
 
-        // Issue token and return same shape as login for client convenience
+        User created = userDAO.create(newUser);
+        String activationToken = userDAO.generateActivationToken(created.getId());
+
+        System.out.println("activation_token after update: " + activationToken);
+        EmailUtil.sendActivationEmail(newUser.getEmail(), activationToken);
+
         String token = authService.issueToken(created);
         writeJson(resp, new AuthResponse(token, created));
     }

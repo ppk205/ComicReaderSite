@@ -27,13 +27,9 @@ public class AuthService {
         }
 
         // Try username first
-        Optional<User> userOpt = userDAO.findByUsername(identifier);
+        Optional<User> userOpt = userDAO.findByEmail(identifier);
         if (userOpt.isEmpty()) {
-            // Fall back to email
-            userOpt = userDAO.findByEmail(identifier);
-            if (userOpt.isEmpty()) {
-                return null;
-            }
+            return null;
         }
 
         User user = userOpt.get();
@@ -47,6 +43,7 @@ public class AuthService {
 
         User updates = new User();
         updates.setLastLogin(user.getLastLogin());
+
         userDAO.update(user.getId(), updates);
 
         return user;
