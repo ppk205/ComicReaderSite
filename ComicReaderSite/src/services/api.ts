@@ -389,59 +389,63 @@ class ApiService {
         }
 
         // ---------- EPUB ----------
+        /** GET /epub */
         getEpubList() {
-                return this.request('/epub');
+        return this.request('/epub');
         }
 
+        /** GET /epub/user/:userId */
         getUserEpubs(userId: string | number) {
-                return this.request(`/epub/user/${userId}`);
+        return this.request(`/epub/user/${userId}`);
         }
 
+        /** GET /epub/:id */
         getEpubById(id: string | number) {
-                return this.request(`/epub/${id}`);
+        return this.request(`/epub/${id}`);
         }
 
+        /** DELETE /epub/:id */
         deleteEpub(id: string | number) {
-                return this.request(`/epub/${id}`, { method: 'DELETE' });
+        return this.request(`/epub/${id}`, { method: 'DELETE' });
         }
 
+        /** POST /epub (upload) — KHÔNG set Content-Type để browser tự thêm boundary */
         uploadEpub(file: File, title?: string, userId?: string) {
-            if (typeof FormData === 'undefined') {
-                throw new Error('FormData is not available in the current environment.');
-            }
-                const form = new FormData();
-                form.append('file', file);
-                if (title) form.append('title', title);
-                if (userId) form.append('userId', userId);
-                // Do not set Content-Type so browser can add boundary automatically
-                return this.request('/epub', { method: 'POST', body: form });
+        const form = new FormData();
+        form.append('file', file);
+        if (title) form.append('title', title);
+        if (userId) form.append('userId', userId);
+        return this.request('/epub', { method: 'POST', body: form });
         }
 
-        /** ArrayBuffer EPUB (dùng cho epub.js) */
+        /** GET binary ArrayBuffer: /epub/file?id=... (dùng cho epub.js) */
         async getEpubFileArrayBuffer(id: string | number): Promise<ArrayBuffer> {
-                const baseUrl = await this.resolveBaseUrl();
-                const url = `${baseUrl}/epub/file?id=${encodeURIComponent(String(id))}`;
-                const res = await fetch(url, {
-                        method: 'GET',
-                        mode: 'cors',
-                        headers: { ...this.getAuthHeaders() },
-                });
-                if (!res.ok) {
-                        let msg = `HTTP ${res.status}`;
-                        try {
-                                const payload = await res.json();
-                                msg = payload?.message || payload?.error || msg;
-                        } catch {}
-                        throw new Error(msg);
-                }
-                return await res.arrayBuffer();
+        const base = this.resolvedBaseUrl ?? (await this.resolveBaseUrl().catch(() => this.baseUrl));
+        const url = `${base}/epub/file?id=${encodeURIComponent(String(id))}`;
+        const res = await fetch(url, { headers: this.getAuthHeaders() });
+        if (!res.ok) {
+            let msg = `HTTP ${res.status}`;
+            try {
+            const ct = res.headers.get('content-type') || '';
+            if (ct.includes('application/json')) {
+                const j = await res.json();
+                msg = (j as any)?.message || (j as any)?.error || msg;
+            } else {
+                msg = await res.text();
+            }
+            } catch {}
+            throw new Error(msg);
+        }
+        return res.arrayBuffer();
         }
 
-        /** (optional) absolute URL to EPUB file */
-        async getEpubFileUrl(id: string | number): Promise<string> {
-                const baseUrl = await this.resolveBaseUrl();
-                return `${baseUrl}/epub/file?id=${encodeURIComponent(String(id))}`;
+        /** Absolute URL để dùng trực tiếp với <a> hoặc epub.js */
+        getEpubFileUrl(id: string | number) {
+        // dùng URL đã resolve nếu có; nếu chưa, rơi về baseUrl hiện tại
+        const base = this.getResolvedBaseUrl();
+        return `${base}/epub/file?id=${encodeURIComponent(String(id))}`;
         }
+
 
 }
 

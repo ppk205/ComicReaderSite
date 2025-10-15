@@ -1,9 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE;
+import apiService from '@/services/api';
 
 export interface EpubBook {
   id: number;
@@ -11,7 +9,6 @@ export interface EpubBook {
   fileName: string;
   fileSizeInBytes: number;
   uploadDate: string;
-  storagePath: string;
 }
 
 export default function EpubCard({
@@ -33,23 +30,11 @@ export default function EpubCard({
     if (!window.confirm(`Are you sure you want to delete "${book.title}"?`)) return;
 
     try {
-      const res = await fetch(`${API_BASE}/epub/${book.id}`, { method: 'DELETE' });
-      if (res.ok) {
-        onBookDeleted();
-        return;
-      }
-
-      let msg = res.statusText;
-      try {
-        const data = await res.json();
-        msg = data?.error || msg;
-      } catch {
-        /* ignore parse error */
-      }
-      alert(`Failed to delete book: ${msg}`);
-    } catch (err) {
+      await apiService.deleteEpub(book.id);
+      onBookDeleted();
+    } catch (err: any) {
       console.error('Delete failed:', err);
-      alert('An unexpected error occurred during deletion.');
+      alert(`Failed to delete book: ${err?.message || 'Unknown error'}`);
     }
   };
 
