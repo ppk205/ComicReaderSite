@@ -1,11 +1,21 @@
+<<<<<<< Updated upstream
 "use client"; // needed for hooks
+=======
+"use client";
+
+>>>>>>> Stashed changes
 import { useState, useMemo, useEffect } from "react";
 
 const MangaCard = ({ manga, featured = false }) => (
   <div
+<<<<<<< Updated upstream
     className={`bg-gray-500 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow ${
       featured ? "h-64" : "h-56"
     }`}
+=======
+    className={`bg-gray-500 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow ${featured ? "h-64" : "h-56"
+      }`}
+>>>>>>> Stashed changes
   >
     <div className="flex h-full">
       <div className={`${featured ? "w-24" : "w-20"} flex-shrink-0`}>
@@ -21,9 +31,14 @@ const MangaCard = ({ manga, featured = false }) => (
       </div>
       <div className="flex-1 p-3 flex flex-col">
         <h3
+<<<<<<< Updated upstream
           className={`font-semibold text-white mb-2 ${
             featured ? "text-lg" : "text-base"
           } line-clamp-2`}
+=======
+          className={`font-semibold text-white mb-2 ${featured ? "text-lg" : "text-base"
+            } line-clamp-2`}
+>>>>>>> Stashed changes
         >
           {manga.title}
         </h3>
@@ -51,9 +66,15 @@ const MangaCard = ({ manga, featured = false }) => (
 
 
 export default function Home() {
+<<<<<<< Updated upstream
   const [featuredManga, setFeaturedManga] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+=======
+  const [featuredManga, setFeaturedManga] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+>>>>>>> Stashed changes
 
   // Search/sort/pagination states
   const [search, setSearch] = useState("");
@@ -61,6 +82,7 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const perPage = 12;
 
+<<<<<<< Updated upstream
   // ✅ Base URL from env or fallback
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/Comic/api";
@@ -70,21 +92,37 @@ export default function Home() {
     async function fetchData() {
       try {
         const res = await fetch(`${API_BASE}/manga`, {
+=======
+  // ✅ Fetch manga from Spring Boot backend
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("http://localhost:8080/Comic/api/manga", {
+>>>>>>> Stashed changes
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Failed to fetch manga data");
         const data = await res.json();
         setFeaturedManga(data);
+<<<<<<< Updated upstream
       } catch (err) {
+=======
+      } catch (err: any) {
+>>>>>>> Stashed changes
         setError(err.message);
       } finally {
         setLoading(false);
       }
     }
     fetchData();
+<<<<<<< Updated upstream
   }, [API_BASE]);
 
   // ✅ filter + sort
+=======
+  }, []);
+
+>>>>>>> Stashed changes
   const filtered = useMemo(() => {
     let data = [...featuredManga];
     if (search) {
@@ -113,9 +151,16 @@ export default function Home() {
             Featured Manga
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+<<<<<<< Updated upstream
             {featuredManga.map((manga) => (
               <MangaCard key={manga.id} manga={manga} featured />
             ))}
+=======
+            {featuredManga.slice(0, 5).map((manga) => (
+              <MangaCard key={manga.id} manga={manga} featured />
+            ))}
+
+>>>>>>> Stashed changes
           </div>
         </section>
 
