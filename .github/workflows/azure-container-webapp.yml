@@ -6,9 +6,9 @@ on:
       - main  # chạy khi push lên nhánh main
 
 env:
-  AZURE_WEBAPP_NAME: your-app-service-name     # tên App Service
-  AZURE_RESOURCE_GROUP: ComicWeb    # tên Resource Group
-  ACR_NAME: yourregistry                       # tên Azure Container Registry
+  AZURE_WEBAPP_NAME: comicreadersite     # tên App Service
+  AZURE_RESOURCE_GROUP: WebMySQL1    # tên Resource Group
+  ACR_NAME: comicreadersite                       # tên Azure Container Registry
   IMAGE_BACKEND: backend
   IMAGE_FRONTEND: frontend
 
