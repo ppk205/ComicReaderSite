@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8a0d68dd-907b-4205-a346-02326b2e8252" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/reader/page.tsx" afterDir="false" />
+    <list default="true" id="abdfa556-2006-48fe-833f-90ddb0c25f35" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/epub/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/epub/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ComicReaderSite/src/components/EpubCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ComicReaderSite/src/components/EpubCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ComicReaderSite/src/components/EpubUpload.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ComicReaderSite/src/components/EpubUpload.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/community/manga/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/community/manga/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/community/posts/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/community/posts/[id]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/community/posts/create/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/community/posts/create/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/community/posts/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ComicReaderSite/src/app/(site)/community/posts/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ComicReaderSite/src/services/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/ComicReaderSite/src/services/api.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -20,29 +20,14 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;travondatrack&quot;
-  }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/ppk205/ComicReaderSite.git&quot;,
-    &quot;accountId&quot;: &quot;ddba0695-d57e-4a0e-937d-2ba5fd3f98e3&quot;
-  }
-}</component>
-  <component name="LogFilters">
-    <option name="FILTER_ERRORS" value="false" />
-    <option name="FILTER_WARNINGS" value="false" />
-    <option name="FILTER_INFO" value="true" />
-    <option name="FILTER_DEBUG" value="true" />
-    <option name="CUSTOM_FILTER" />
+  <component name="PackageJsonUpdateNotifier">
+    <dismissed value="$PROJECT_DIR$/ComicReaderSite/package.json" />
+    <dismissed value="$PROJECT_DIR$/package.json" />
   </component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 1
+  &quot;associatedIndex&quot;: 5
 }</component>
-  <component name="ProjectId" id="3470sBoMNEnwD1eTvC6jD01dFN0" />
+  <component name="ProjectId" id="347Fzu72kCbngWOgUrUq4ySwPwZ" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -57,7 +42,14 @@
     "git-widget-placeholder": "Merging QuocTinh-backup",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "settings.editor.selected.configurable": "com.poratu.idea.plugins.tomcat.setting.TomcatServersConfigurable"
+    "last_opened_file_path": "D:/Desktop/HK1_2025_2026/Part1/WEPR/Project/Clone13/ComicReaderSite",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "ts.external.directory.path": "D:\\Desktop\\HK1_2025_2026\\Part1\\WEPR\\Project\\Clone13\\ComicReaderSite\\ComicReaderSite\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RunDashboard">
@@ -105,7 +97,9 @@
       <created>1760549507152</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1760549507152</updated>
+      <updated>1760556968570</updated>
+      <workItem from="1760556969916" duration="279000" />
+      <workItem from="1760560300284" duration="1307000" />
     </task>
     <servers />
   </component>

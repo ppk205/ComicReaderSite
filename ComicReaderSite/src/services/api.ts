@@ -1,3 +1,5 @@
+import { User } from "@/types/auth";
+
 // API Service for communicating with Tomcat backend
 // Prefer local env in development. If NEXT_PUBLIC_API_BASE is not set,
 // fallback to localhost so local dev doesn't call production by accident.
@@ -73,59 +75,179 @@ class ApiService {
         } catch (error) {
           console.warn(`[ApiService] Probe failed: ${base}/health`, error);
         }
-      }
-      const fallback = this.candidateBaseUrls[0];
-      this.resolvedBaseUrl = fallback;
-      console.warn(`[ApiService] Falling back to: ${fallback}`);
-      return fallback;
-    })().finally(() => {
-      this.resolvingPromise = null;
-    });
 
-    return this.resolvingPromise as Promise<string>;
-  }
-  // ✅ Generic fetch method (your provided code + safe merge)
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const normalisedEndpoint = endpoint.startsWith("/")
-      ? endpoint
-      : `/${endpoint}`;
-    const base =
-      this.resolvedBaseUrl ??
-      (await this.resolveBaseUrl().catch(() => this.baseUrl));
-    const url = `${base}${normalisedEndpoint}`;
-
-    const authHeaders = this.getAuthHeaders();
-    const mergedHeaders: Record<string, string> = { ...authHeaders };
-
-    // Merge user headers if any
-    if (options.headers instanceof Headers) {
-      options.headers.forEach((value, key) => (mergedHeaders[key] = value));
-    } else if (Array.isArray(options.headers)) {
-      options.headers.forEach(([key, value]) => (mergedHeaders[key] = value));
-    } else if (options.headers) {
-      Object.assign(mergedHeaders, options.headers as Record<string, string>);
+        // always send as "email" so backend's LoginRequest.email is populated
+        return this.request('/auth/login', {
+            method: 'POST',
+            // credentials: 'include',
+            body: JSON.stringify({ email: identifier, password }),
+        });
     }
 
-    const hasBody = options.body !== undefined && options.body !== null;
-    const isFormData =
-      typeof FormData !== "undefined" && options.body instanceof FormData;
 
-    if (hasBody && !isFormData && !mergedHeaders["Content-Type"]) {
-      mergedHeaders["Content-Type"] = "application/json";
+    async logout() {
+        return this.request('/auth/logout', {
+            method: 'POST',
+        });
     }
 
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers: mergedHeaders,
-      });
+    async getCurrentUser(): Promise<User | null> {
+        return this.request<User>("/auth/me");
+    }
 
-      if (!response.ok) {
-        // Try to parse error message if available
-        let errBody = null;
+    // Register endpoint (matches /api/auth/register on backend)
+    async register(username: string, email: string, password: string) {
+        return this.request('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({ username, email, password}),
+        });
+    }
+
+    // Dashboard endpoints
+    async getDashboardStats() {
+        return this.request('/dashboard/stats');
+    }
+
+    async getRecentActivity() {
+        return this.request('/dashboard/activity');
+    }
+
+    // Manga endpoints
+    async getMangaList() {
+        return this.request('/manga');
+    }
+
+    async getMangaById(id: string) {
+        return this.request(`/manga/${id}`);
+    }
+
+    async getChapterImages(mangaId: string, chapterId: string) {
+        const query = new URLSearchParams({ mangaId, chapterId });
+        return this.request(`/chapter-images?${query.toString()}`);
+    }
+
+    async getMangaChapters(mangaId: string) {
+        const query = new URLSearchParams({ mangaId });
+        return this.request(`/manga-chapters?${query.toString()}`);
+    }
+
+    async getMangaChapterById(id: string) {
+        return this.request(`/manga-chapters/${id}`);
+    }
+
+    async createMangaChapter(chapterData: any) {
+        return this.request('/manga-chapters', {
+            method: 'POST',
+            body: JSON.stringify(chapterData),
+        });
+    }
+
+    async updateMangaChapter(id: string, chapterData: any) {
+        return this.request(`/manga-chapters/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(chapterData),
+        });
+    }
+
+    async deleteMangaChapter(id: string) {
+        return this.request(`/manga-chapters/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    async createManga(mangaData: any) {
+        return this.request('/manga', {
+            method: 'POST',
+            body: JSON.stringify(mangaData),
+        });
+    }
+
+    async updateManga(id: string, mangaData: any) {
+        return this.request(`/manga/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(mangaData),
+        });
+    }
+
+    async deleteManga(id: string) {
+        return this.request(`/manga/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    // Moderation endpoints
+    async getModerationReports() {
+        return this.request('/moderation/reports');
+    }
+
+    async getModerationQueue() {
+        return this.request('/moderation/approval');
+    }
+
+    // User management endpoints
+    async getUserList(page: number = 1, limit: number = 10) {
+        return this.request(`/users?page=${page}&limit=${limit}`);
+    }
+
+    async getUserById(id: string) {
+        return this.request(`/users/${id}`);
+    }
+
+    async createUser(userData: any) {
+        return this.request('/users', {
+            method: 'POST',
+            body: JSON.stringify(userData),
+        });
+    }
+
+    async updateUser(id: string, userData: any) {
+        return this.request(`/users/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(userData),
+        });
+    }
+
+    async deleteUser(id: string) {
+        return this.request(`/users/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    // Profile endpoints
+    async getProfile(userId: string) {
+        return this.request(`/users/${userId}`);  // Dùng /users thay vì /profile
+    }
+
+    async updateProfile(userId: string, profileData: any) {
+        return this.request(`/users/${userId}`, {  // Dùng /users thay vì /profile
+            method: 'PUT',
+            body: JSON.stringify(profileData),
+        });
+    }
+
+    // User Follow endpoints
+    async followUser(userId: string) {
+        return this.request(`/follow/${userId}`, {
+            method: 'POST',
+        });
+    }
+
+    async unfollowUser(userId: string) {
+        return this.request(`/follow/${userId}`, {
+            method: 'DELETE',
+        });
+    }
+
+    async getFollowers(userId: string) {
+        return this.request(`/follow/followers?userId=${userId}`);
+    }
+
+    async getFollowing(userId: string) {
+        return this.request(`/follow/following?userId=${userId}`);
+    }
+
+    // Check if backend is reachable
+    async healthCheck(): Promise<boolean> {
         try {
           errBody = await response.json();
         } catch {}
