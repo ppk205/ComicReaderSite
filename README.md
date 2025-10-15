@@ -2,11 +2,13 @@ Nếu bị lỗi: Access to fetch at 'http://localhost:8080/Comic/api/login' fro
 
 
 
+Lưu ý: Phải dùng cách dưới để thực hiện reset password
+
 
 
 Mở chrome theo cách sau:
 
-&nbsp;   Window + R
+    Window + R
 
-&nbsp;   "C:\\Users\\mhuyy\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe" --disable-web-security --user-data-dir="D:\\App\\TomCat\\apache-tomcat-10.1.44-windows-x64\\apache-tomcat-10.1.44"
+    "C:\\Users\\mhuyy\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe" --disable-web-security --user-data-dir="D:\\App\\TomCat\\apache-tomcat-10.1.44-windows-x64\\apache-tomcat-10.1.44"
 
