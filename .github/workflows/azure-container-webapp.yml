@@ -31,7 +31,7 @@ jobs:
       # Build và push multi-container bằng docker-compose
       - name: Build and push images with Docker Compose
         run: |
-          docker-compose -f docker-compose.yml build
+          docker compose -f docker-compose.yml build
           docker tag $(docker images -q ${{ env.IMAGE_BACKEND }}) ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_BACKEND }}:latest
           docker tag $(docker images -q ${{ env.IMAGE_FRONTEND }}) ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_FRONTEND }}:latest
           docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_BACKEND }}:latest
