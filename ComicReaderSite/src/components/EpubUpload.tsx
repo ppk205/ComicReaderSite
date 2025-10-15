@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import api from '@/services/api';
+import epubApi from '@/services/epubApi';
 
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
 
@@ -54,9 +54,9 @@ export default function EpubUpload({
       setIsUploading(true);
       setMessage(null);
 
-      // ✅ Dùng ApiService: tự gắn Authorization + tự resolve baseURL
+      // ✅ Dùng epubApi: tự gắn Authorization + tự resolve baseURL
       // Nếu backend cần userId trong form, method uploadEpub nên nhận tham số thứ 3.
-      await (api as any).uploadEpub(file, title.trim(), userId);
+      await (epubApi as any).uploadEpub(file, title.trim(), userId);
 
       // Reset form
       setFile(null);
