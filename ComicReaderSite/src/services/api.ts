@@ -315,8 +315,20 @@ class ApiService {
         if (!r.ok) throw new Error(await r.text());
         return r.json();
     }
-
-
+    async getBookmarks() {
+    return this.request("/bookmarks");
+  }
+  async saveBookmark(bookmark: any) {
+    return this.request("/bookmarks", {
+      method: "POST",
+      body: JSON.stringify(bookmark),
+    });
+  }
+  async deleteBookmark(id: string | number) {
+    return this.request(`/bookmarks/${id}`, {
+      method: "DELETE",
+    });
+  }
 }
 
 export const apiService = new ApiService();
