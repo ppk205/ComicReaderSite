@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import EpubUpload from '@/components/EpubUpload';
 import EpubCard from '@/components/EpubCard';
 import { useAuth } from '@/contexts/AuthContext';
-import api from '@/services/api';
 import epubApi from '@/services/epubApi';
 
 interface EpubBook {
