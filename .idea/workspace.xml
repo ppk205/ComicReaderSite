@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="76e2c3f1-2b1d-4141-b72e-6e935d2a620f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/artifacts/Comic_war2.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/jarRepositories.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/libraries/google_code_gson.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/libraries/guicedee_services_jakarta_servlet_api.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/libraries/mongodb_mongo_java_driver.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/libraries/mysql_connector_j_9_3_0.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/BACKEND_MIGRATION_NOTE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/Comic.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/dao/ChapterImageDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/dao/MangaDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/dao/RoleDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/dao/UserDAO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/entity/ChapterImageEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/entity/MangaEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/entity/PermissionEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/entity/UserEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/entity/UserRoleEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/ActivityItem.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/AuthResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/ChapterImage.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/DashboardStats.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/LoginRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/Manga.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/ModerationReport.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/ModerationSubmission.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/Permission.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/RegisterRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/SystemSettings.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/User.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/model/UserRole.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/persistence/JPAUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/persistence/StringListConverter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/service/AuthService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/service/DashboardService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/service/ModerationService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/service/SystemSettingsService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/service/TokenService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/servlet/AuthServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/servlet/BaseServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/servlet/ChapterImageServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/servlet/DashboardServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/servlet/HealthServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/servlet/MangaServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/servlet/ModerationServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/servlet/SettingsServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/servlet/UserServlet.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/java/reader/site/Comic/util/PasswordUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/resources/META-INF/beans.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/resources/META-INF/persistence.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/resources/META-INF/services/jakarta.persistence.spi.PersistenceProvider" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/webapp/WEB-INF/web.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/src/main/webapp/index.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic.war" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/META-INF/beans.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/META-INF/persistence.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/META-INF/services/jakarta.persistence.spi.PersistenceProvider" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/dao/ChapterImageDAO.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/dao/MangaDAO.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/dao/RoleDAO.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/dao/UserDAO.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/entity/ChapterImageEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/entity/MangaEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/entity/PermissionEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/entity/UserEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/entity/UserRoleEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/ActivityItem.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/AuthResponse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/ChapterImage.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/DashboardStats.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/LoginRequest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/Manga.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/ModerationReport.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/ModerationSubmission.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/Permission.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/RegisterRequest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/SystemSettings.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/User.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/model/UserRole.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/persistence/JPAUtil.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/persistence/StringListConverter$1.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/persistence/StringListConverter.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/service/AuthService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/service/DashboardService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/service/ModerationService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/service/SystemSettingsService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/service/TokenService$TokenMetadata.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/service/TokenService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/AuthServlet$MessageResponse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/AuthServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/BaseServlet$ErrorResponse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/BaseServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/ChapterImageServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/DashboardServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/HealthServlet$HealthResponse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/HealthServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/MangaServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/ModerationServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/SettingsServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/UserServlet$MessageResponse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/UserServlet$UserRequest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/servlet/UserServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/classes/reader/site/Comic/util/PasswordUtil.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/angus-activation-2.0.0.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/antlr4-runtime-4.13.0.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/byte-buddy-1.14.11.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/classmate-1.5.1.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/gson-2.10.1.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/hibernate-commons-annotations-6.0.6.Final.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/hibernate-core-6.4.4.Final.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/istack-commons-runtime-4.1.1.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/jakarta.activation-api-2.1.0.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/jakarta.inject-api-2.0.1.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/jakarta.persistence-api-3.1.0.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/jakarta.transaction-api-2.0.1.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/jakarta.xml.bind-api-4.0.0.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/jandex-3.1.2.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/jaxb-core-4.0.2.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/jaxb-runtime-4.0.2.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/jbcrypt-0.4.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/jboss-logging-3.5.0.Final.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/mysql-connector-j-9.3.0.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/protobuf-java-4.29.0.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/slf4j-api-2.0.13.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/slf4j-simple-2.0.13.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/lib/txw2-4.0.2.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/WEB-INF/web.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/Comic/index.jsp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/META-INF/beans.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/META-INF/persistence.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/META-INF/services/jakarta.persistence.spi.PersistenceProvider" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/dao/ChapterImageDAO.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/dao/MangaDAO.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/dao/RoleDAO.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/dao/UserDAO.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/entity/ChapterImageEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/entity/MangaEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/entity/PermissionEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/entity/UserEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/entity/UserRoleEntity.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/ActivityItem.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/AuthResponse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/ChapterImage.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/DashboardStats.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/LoginRequest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/Manga.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/ModerationReport.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/ModerationSubmission.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/Permission.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/RegisterRequest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/SystemSettings.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/User.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/model/UserRole.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/persistence/JPAUtil.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/persistence/StringListConverter$1.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/persistence/StringListConverter.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/service/AuthService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/service/DashboardService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/service/ModerationService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/service/SystemSettingsService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/service/TokenService$TokenMetadata.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/service/TokenService.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/AuthServlet$MessageResponse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/AuthServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/BaseServlet$ErrorResponse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/BaseServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/ChapterImageServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/DashboardServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/HealthServlet$HealthResponse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/HealthServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/MangaServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/ModerationServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/SettingsServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/UserServlet$MessageResponse.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/UserServlet$UserRequest.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/servlet/UserServlet.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/classes/reader/site/Comic/util/PasswordUtil.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/maven-archiver/pom.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Comic/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="LogFilters">
+    <option name="FILTER_ERRORS" value="false" />
+    <option name="FILTER_WARNINGS" value="false" />
+    <option name="FILTER_INFO" value="true" />
+    <option name="FILTER_DEBUG" value="true" />
+    <option name="CUSTOM_FILTER" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="343AZ8TT2HtxKrPhfDAEqT9kKFt" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Maven.Comic [clean,package].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Smart Tomcat.Web.executor": "Run",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/UTE/HK5/Lap Trinh Web/Do an cuoi ki/ComicReaderSite-test"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="Web" type="com.poratu.idea.plugins.tomcat">
+      <predefined_log_file enabled="true" id="Tomcat Localhost Log" />
+      <predefined_log_file enabled="true" id="Tomcat Access Log" />
+      <predefined_log_file id="Tomcat Catalina Log" />
+      <predefined_log_file id="Tomcat Manager Log" />
+      <predefined_log_file id="Tomcat Host Manager Log" />
+      <option name="catalinaBase" value="C:\Users\LQK\.SmartTomcat\ComicReaderSite-test\Comic" />
+      <option name="contextPath" value="/Comic" />
+      <option name="docBase" value="$PROJECT_DIR$/Comic/src/main/webapp" />
+      <option name="extraClassPath" value="" />
+      <option name="tomcatInfo">
+        <TomcatInfo>
+          <option name="name" value="Apache Tomcat/10.1.47" />
+          <option name="path" value="$USER_HOME$/Downloads/App/apache-tomcat-10.1.47" />
+          <option name="version" value="10.1.47.0" />
+        </TomcatInfo>
+      </option>
+      <option name="vmOptions" value="" />
+      <module name="Comic" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+        <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/Comic/pom.xml" goal="clean package" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.26830.84" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="76e2c3f1-2b1d-4141-b72e-6e935d2a620f" name="Changes" comment="" />
+      <created>1760431935163</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1760431935163</updated>
+    </task>
+    <servers />
+  </component>
+</project>
