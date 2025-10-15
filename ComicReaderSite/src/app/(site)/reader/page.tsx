@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { Book, Rendition, Location, Section, View } from 'epubjs';
-import { apiService } from '@/services/api'; // ✅ dùng ApiService
+
+import epubApi from '@/services/epubApi';
 
 const NAV_HEIGHT = 72;     // header
 const CONTROL_BAR = 42;    // thanh Prev/Next
@@ -118,8 +119,8 @@ export default function ReaderPage() {
         viewer.style.background = '#000';
         viewer.style.overflow = 'hidden';
 
-        // ✅ dùng ApiService để lấy ArrayBuffer EPUB
-        const ab = await apiService.getEpubFileArrayBuffer(bookId);
+        // dùng epubApi để lấy ArrayBuffer EPUB
+        const ab = await epubApi.getEpubFileArrayBuffer(bookId);
 
         const ePub = (await import('epubjs')).default;
         const book = ePub(ab) as Book;
@@ -224,7 +225,7 @@ export default function ReaderPage() {
           borderBottom: '1px solid #333',
           position: 'sticky',
           top: 0,
-          zIndex: 10,
+          zIndex: 0,
           background: '#111',
         }}
       >
