@@ -58,14 +58,11 @@ export function AppHeader() {
 
         <div className="flex items-center gap-8">
           <nav className="flex gap-6 items-center">
-            <Link href="/list" className="text-2xl font-bold text-gray-900 hover:text-purple-600">
-              List
-            </Link>
             <Link href="/community" className="text-2xl font-bold text-gray-900 hover:text-purple-600">
               Community
             </Link>
-            <Link href="/ranking" className="text-2xl font-bold text-gray-900 hover:text-purple-600">
-              Ranking - Season
+            <Link href="/epub" className="text-2xl font-bold text-gray-900 hover:text-purple-600">
+              Personal Space
             </Link>
           </nav>
           <nav className="flex gap-6 items-center">

@@ -22,7 +22,7 @@ function ResetPasswordInner() {
     try {
       const base =
         process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") ||
-        "http://localhost:8080/api";
+         "https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/api";
       const res = await fetch(`${base}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
