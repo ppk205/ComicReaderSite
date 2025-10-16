@@ -15,12 +15,16 @@ export default function ForgotPasswordPage() {
       const formData = new URLSearchParams();
       formData.append("email", email);
 
-      const res = await fetch(
-        "https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/api/auth/forgot-password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData.toString(),
+            const res = await fetch('https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/api/auth/forgot-password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString(),
+            });
+
+            const data = await res.json();
+            setMessage(data.message || data.error || 'An unexpected error occurred');
+        } catch {
+            setMessage('Failed to send request. Please try again.');
         }
       );
 
