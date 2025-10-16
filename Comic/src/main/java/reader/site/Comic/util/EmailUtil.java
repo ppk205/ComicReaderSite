@@ -10,8 +10,8 @@ public class EmailUtil {
     // ✅ Cấu hình Gmail SMTP
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final int SMTP_PORT = 587;
-    private static final String USERNAME = "mhuyy.ho@gmail.com"; // đổi thành Gmail của bạn
-    private static final String PASSWORD = "mmexydfgbzbcnohb";   // password ứng dụng (App Password)
+    private static final String USERNAME = System.getenv("MAIL_USER");
+    private static final String PASSWORD = System.getenv("MAIL_PASSWORD");
 
     // ✅ Hàm gửi mail cơ bản
     public static void sendEmail(String to, String subject, String content) {

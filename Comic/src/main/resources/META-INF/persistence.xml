@@ -16,9 +16,9 @@
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://websql1.mysql.database.azure.com:3306/ComicDB?useSSL=true&amp;requireSSL=true&amp;serverTimezone=UTC"/>
-            <property name="jakarta.persistence.jdbc.user" value="ppk123"/>
-            <property name="jakarta.persistence.jdbc.password" value="Mysql@1234"/>
+            <property name="jakarta.persistence.jdbc.url" value="${DB_URL}"/>
+            <property name="jakarta.persistence.jdbc.user" value="${DB_USER}"/>
+            <property name="jakarta.persistence.jdbc.password" value="${DB_PASSWORD}"/>
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>

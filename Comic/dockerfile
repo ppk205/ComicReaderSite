@@ -13,6 +13,19 @@ RUN rm -rf target && mvn clean package -U -DskipTests
 #Stage 2: Build
 FROM tomcat:10.1-jdk17-temurin
 
+ARG DB_URL=""
+ARG DB_USER=""
+ARG DB_PASSWORD=""
+ARG MAIL_USER=""
+ARG MAIL_PASSWORD=""
+
+ENV DB_URL=${DB_URL} \
+	DB_USER=${DB_USER} \
+	DB_PASSWORD=${DB_PASSWORD} \
+	MAIL_USER=${MAIL_USER} \
+	MAIL_PASSWORD=${MAIL_PASSWORD} \
+	JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -DDB_URL=${DB_URL} -DDB_USER=${DB_USER} -DDB_PASSWORD=${DB_PASSWORD} -DMAIL_USER=${MAIL_USER} -DMAIL_PASSWORD=${MAIL_PASSWORD}"
+
 WORKDIR /usr/local/tomcat
 
 RUN sed -i 's/port="8005"/port="-1"/' conf/server.xml
