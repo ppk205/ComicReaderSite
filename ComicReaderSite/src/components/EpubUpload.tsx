@@ -1,11 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import apiService from '@/services/api';
 
-// Giả định API_BASE
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE;
-const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // Giới hạn upload 50MB cho mỗi file (Tùy chọn)
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
 
 export default function EpubUpload({
   userId,
@@ -21,61 +19,54 @@ export default function EpubUpload({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-        setMessage({
-          text: `File is too large. Max size is ${MAX_FILE_SIZE_BYTES / 1024 / 1024} MB.`,
-          type: 'error',
-        });
-        setFile(null);
-        return;
-      }
-      setFile(selectedFile);
-      // Đặt tiêu đề mặc định là tên file (bỏ đuôi .epub)
-      setTitle(selectedFile.name.replace(/\.epub$/i, ''));
-      setMessage(null);
+    if (!selectedFile) return;
+
+    // Kiểm tra kích thước
+    if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+      setMessage({
+        text: `File is too large. Max size is ${Math.floor(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB.`,
+        type: 'error',
+      });
+      setFile(null);
+      return;
     }
+
+    // Kiểm tra phần mở rộng
+    if (!/\.epub$/i.test(selectedFile.name)) {
+      setMessage({ text: 'Please select a .epub file.', type: 'error' });
+      setFile(null);
+      return;
+    }
+
+    setFile(selectedFile);
+    setTitle(selectedFile.name.replace(/\.epub$/i, '')); // đặt tiêu đề mặc định
+    setMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title) {
+    if (!file || !title.trim()) {
       setMessage({ text: 'Please select a file and enter a title.', type: 'error' });
       return;
     }
 
-    setIsUploading(true);
-    setMessage(null);
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('userId', userId);
-    formData.append('title', title);
-    // Giả định backend chấp nhận form-data cho việc upload
-
     try {
-      // Giả định endpoint API: /api/epub (POST)
-      const res = await fetch(`${API_BASE}/epub`, {
-        method: 'POST',
-        // Next.js/Browser sẽ tự thêm Content-Type: multipart/form-data
-        body: formData,
-      });
+      setIsUploading(true);
+      setMessage(null);
 
-      if (res.ok) {
-        // Xóa form và cập nhật danh sách
-        setFile(null);
-        setTitle('');
-        onUploadSuccess();
-        setMessage({ text: 'Epub book uploaded successfully!', type: 'success' });
-      } else {
-        const errorData = await res.json();
-        // Xử lý lỗi từ backend (ví dụ: Vượt quá 500MB)
-        const errorMsg = errorData?.error || 'Failed to upload book.';
-        setMessage({ text: errorMsg, type: 'error' });
-      }
-    } catch (err) {
+      // ✅ Dùng epubApi: tự gắn Authorization + tự resolve baseURL
+      // Nếu backend cần userId trong form, method uploadEpub nên nhận tham số thứ 3.
+      await (apiService as any).uploadEpub(file, title.trim(), userId);
+
+      // Reset form
+      setFile(null);
+      setTitle('');
+      onUploadSuccess();
+      setMessage({ text: 'Epub book uploaded successfully!', type: 'success' });
+    } catch (err: any) {
       console.error('Upload failed:', err);
-      setMessage({ text: 'An unexpected error occurred during upload.', type: 'error' });
+      const msg = err?.message || 'Failed to upload book.';
+      setMessage({ text: msg, type: 'error' });
     } finally {
       setIsUploading(false);
     }
@@ -87,7 +78,7 @@ export default function EpubUpload({
       className="bg-purple-50 p-6 rounded-lg shadow-inner border border-purple-200 mb-8"
     >
       <h3 className="text-2xl font-semibold text-gray-900 mb-4">Upload New Epub</h3>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         {/* File Input */}
         <div>
@@ -135,11 +126,11 @@ export default function EpubUpload({
 
       {/* Message Area */}
       {message && (
-        <p className={`mt-4 p-3 rounded-lg text-sm font-semibold ${
-          message.type === 'success'
-            ? 'bg-green-100 text-green-700'
-            : 'bg-red-100 text-red-700'
-        }`}>
+        <p
+          className={`mt-4 p-3 rounded-lg text-sm font-semibold ${
+            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}
+        >
           {message.text}
         </p>
       )}

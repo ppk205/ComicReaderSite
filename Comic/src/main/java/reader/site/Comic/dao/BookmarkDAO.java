@@ -30,8 +30,17 @@ public class BookmarkDAO {
 
             if (!results.isEmpty()) {
                 entity = results.get(0);
-                entity.setTitle(title);
-                entity.setCover(cover);
+                // Preserve existing title/cover if payload omitted; fall back to manga title/cover
+                if (title != null) {
+                    entity.setTitle(title);
+                } else if (entity.getTitle() == null && entity.getManga() != null) {
+                    entity.setTitle(entity.getManga().getTitle());
+                }
+                if (cover != null) {
+                    entity.setCover(cover);
+                } else if (entity.getCover() == null && entity.getManga() != null) {
+                    entity.setCover(entity.getManga().getCover());
+                }
                 entity.setCurrentChapter(currentChapter);
                 entity.setTotalChapters(totalChapters);
                 entity.setReadingProgress(readingProgress);
@@ -45,8 +54,9 @@ public class BookmarkDAO {
                 }
                 entity.setUser(user);
                 entity.setManga(manga);
-                entity.setTitle(title);
-                entity.setCover(cover);
+                // If title/cover not provided, use values from MangaEntity
+                entity.setTitle(title != null ? title : manga.getTitle());
+                entity.setCover(cover != null ? cover : manga.getCover());
                 entity.setCurrentChapter(currentChapter);
                 entity.setTotalChapters(totalChapters);
                 entity.setReadingProgress(readingProgress);
@@ -64,9 +74,47 @@ public class BookmarkDAO {
             Integer tc = entity.getTotalChapters();
             if (tc == null) {
                 tc = computeTotalChapters(em, entity.getManga().getId());
+                // persist computed total chapters back to entity for future reads
+                try {
+                    if (tc != null) {
+                        em.getTransaction().begin();
+                        BookmarkEntity refresh = em.find(BookmarkEntity.class, entity.getId());
+                        if (refresh != null) {
+                            refresh.setTotalChapters(tc);
+                            em.getTransaction().commit();
+                        } else {
+                            em.getTransaction().rollback();
+                        }
+                    }
+                } catch (Exception ex) {
+                    if (em.getTransaction().isActive()) em.getTransaction().rollback();
+                }
             }
             model.setTotalChapters(tc);
-            model.setReadingProgress(entity.getReadingProgress());
+            // Ensure readingProgress is returned; if missing, compute from current/total and persist back
+            Double rp = entity.getReadingProgress();
+            if (rp == null) {
+                Integer c = entity.getCurrentChapter();
+                Integer t = tc;
+                if (c != null && t != null && t > 0) {
+                    double computed = Math.max(0.0, Math.min(1.0, ((double) c) / ((double) t)));
+                    rp = computed;
+                    // try to persist computed reading progress for future reads
+                    try {
+                        em.getTransaction().begin();
+                        BookmarkEntity refreshRp = em.find(BookmarkEntity.class, entity.getId());
+                        if (refreshRp != null) {
+                            refreshRp.setReadingProgress(rp);
+                            em.getTransaction().commit();
+                        } else {
+                            em.getTransaction().rollback();
+                        }
+                    } catch (Exception ex) {
+                        if (em.getTransaction().isActive()) em.getTransaction().rollback();
+                    }
+                }
+            }
+            model.setReadingProgress(rp);
             // Optionally include id and timestamps if needed by frontend
             try {
                 model.getClass().getMethod("setId", String.class).invoke(model, String.valueOf(entity.getId()));
