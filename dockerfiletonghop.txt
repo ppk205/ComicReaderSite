@@ -1,0 +1,83 @@
+<<<<<<< HEAD
+#Front-end - node18
+
+FROM node:18-alpine AS build
+WORKDIR /app
+#copy package.json and package-lock.json để cache dependencies
+COPY package*.json ./
+#cài đặt package
+RUN npm install
+#copy toàn bộ source code
+COPY . .
+#build project
+RUN npm run build
+
+EXPOSE 3000
+CMD ["npm", "start"]
+
+#back-end-java - tomcat10 - jdk17
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+WORKDIR /app
+
+# Copy pom.xml trước để cache dependency
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source và build WAR
+COPY src ./src
+RUN rm -rf target && mvn clean package -U -DskipTests
+
+#Stage 2: Build
+FROM tomcat:10.1-jdk17-temurin
+
+WORKDIR /usr/local/tomcat
+
+RUN sed -i 's/port="8005"/port="-1"/' conf/server.xml
+RUN rm -rf webapps/*
+
+COPY --from=build /app/target/*.war webapps/ROOT.war
+
+EXPOSE 8080
+CMD ["catalina.sh", "run"]
+=======
+#Front-end - node18
+
+FROM node:18-alpine AS build
+WORKDIR /app
+#copy package.json and package-lock.json để cache dependencies
+COPY package*.json ./
+#cài đặt package
+RUN npm install
+#copy toàn bộ source code
+COPY . .
+#build project
+RUN npm run build
+
+EXPOSE 3000
+CMD ["npm", "start"]
+
+#back-end-java - tomcat10 - jdk17
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+WORKDIR /app
+
+# Copy pom.xml trước để cache dependency
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source và build WAR
+COPY src ./src
+RUN rm -rf target && mvn clean package -U -DskipTests
+
+#Stage 2: Build
+FROM tomcat:10.1-jdk17-temurin
+
+WORKDIR /usr/local/tomcat
+
+RUN sed -i 's/port="8005"/port="-1"/' conf/server.xml
+RUN rm -rf webapps/*
+
+COPY --from=build /app/target/*.war webapps/ROOT.war
+
+EXPOSE 8080
+CMD ["catalina.sh", "run"]
+>>>>>>> 8056ef92f9ca6650cbc5711d7c4ba2540a5acd06
