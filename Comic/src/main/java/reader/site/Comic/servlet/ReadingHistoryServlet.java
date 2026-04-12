@@ -28,18 +28,20 @@ public class ReadingHistoryServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String userId = req.getParameter("userId");
-        
-        if (userId == null || userId.isEmpty()) {
-            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "userId parameter required");
+        // [SECURITY FIX] Vuln #6: doGet now requires authentication.
+        // userId is extracted from the token, not from query params — prevents IDOR.
+        User user = getAuthenticatedUser(req);
+        if (user == null) {
+            writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
             return;
         }
 
         try {
-            List<ReadingHistory> history = historyDAO.findByUserId(Long.parseLong(userId));
+            Long userId = Long.parseLong(user.getId());
+            List<ReadingHistory> history = historyDAO.findByUserId(userId);
             writeJson(resp, history);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("[ReadingHistoryServlet] Error fetching history: " + e);
             writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching reading history");
         }
     }
@@ -76,7 +78,7 @@ public class ReadingHistoryServlet extends BaseServlet {
             
             writeJson(resp, saved);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("[ReadingHistoryServlet] Error saving progress: " + e);
             writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error saving reading progress");
         }
     }
@@ -97,7 +99,21 @@ public class ReadingHistoryServlet extends BaseServlet {
 
         try {
             String historyId = pathInfo.substring(1);
-            boolean deleted = historyDAO.delete(Long.parseLong(historyId));
+            Long historyIdLong = Long.parseLong(historyId);
+
+            // [SECURITY FIX] Vuln #19: Verify ownership before deleting.
+            // Check that the history record belongs to the authenticated user.
+            ReadingHistory existing = historyDAO.findById(historyIdLong);
+            if (existing == null) {
+                writeError(resp, HttpServletResponse.SC_NOT_FOUND, "History not found");
+                return;
+            }
+            if (!String.valueOf(existing.getUserId()).equals(user.getId())) {
+                writeError(resp, HttpServletResponse.SC_FORBIDDEN, "Access denied");
+                return;
+            }
+
+            boolean deleted = historyDAO.delete(historyIdLong);
             
             if (deleted) {
                 setCorsHeaders(resp);
@@ -106,7 +122,7 @@ public class ReadingHistoryServlet extends BaseServlet {
                 writeError(resp, HttpServletResponse.SC_NOT_FOUND, "History not found");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("[ReadingHistoryServlet] Error deleting history: " + e);
             writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error deleting history");
         }
     }

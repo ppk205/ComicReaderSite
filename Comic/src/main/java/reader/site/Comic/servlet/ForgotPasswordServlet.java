@@ -25,15 +25,14 @@ public class ForgotPasswordServlet extends HttpServlet {
             return;
         }
 
-        // ✅ Tạo token reset qua DAO
+        // ✅ Tạo token reset qua DAO (không tiết lộ email có tồn tại hay không)
         String token = userDAO.generateResetToken(email);
 
         if (token != null) {
             // ✅ Gửi email reset password
             EmailUtil.sendResetPasswordEmail(email, token);
-            res.getWriter().write("{\"message\": \"Email đặt lại mật khẩu đã được gửi.\"}");
-        } else {
-            res.getWriter().write("{\"error\": \"Email không tồn tại trong hệ thống.\"}");
         }
+        // Luôn trả về cùng một message để tránh user enumeration
+        res.getWriter().write("{\"message\": \"Nếu email tồn tại trong hệ thống, bạn sẽ nhận được email đặt lại mật khẩu.\"}");
     }
 }

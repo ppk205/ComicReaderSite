@@ -77,6 +77,8 @@ public class DashboardServlet extends BaseServlet {
             token = token.substring(7);
         }
         User user = authService.resolveToken(token);
-        return user != null;
+        // [SECURITY FIX] Vuln #10: Must be logged in AND have admin role
+        if (user == null) return false;
+        return user.getRole() != null && "role-admin".equals(user.getRole().getName());
     }
 }

@@ -141,7 +141,7 @@ function ReaderInner() {
           flow: 'paginated',
           spread: 'none',
           manager: 'default',
-          allowScriptedContent: true,
+          allowScriptedContent: false, // [SECURITY FIX] Vuln #4: Prevents XSS via malicious EPUB scripts
           minSpreadWidth: 99999,
         });
         rendition.spread('none');

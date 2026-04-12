@@ -17,9 +17,10 @@ public final class PasswordUtil {
         try {
             if (isBCryptHash(hashed)) {
                 return BCrypt.checkpw(plain, hashed);
-            } else {
-                return hashed.equals(plain);
             }
+            // [SECURITY FIX] Vuln #12: Do NOT fall back to plaintext comparison.
+            // Any non-bcrypt hash in the DB must be re-hashed on next password change.
+            return false;
         } catch (Exception ex) {
             return false;
         }

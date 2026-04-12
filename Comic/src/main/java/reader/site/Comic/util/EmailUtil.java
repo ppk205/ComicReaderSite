@@ -3,15 +3,16 @@ package reader.site.Comic.util;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import reader.site.Comic.util.EnvConfig;
 import java.util.Properties;
 
 public class EmailUtil {
 
-    // ✅ Cấu hình Gmail SMTP
+    // ✅ Cấu hình Gmail SMTP — credentials từ environment variables
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final int SMTP_PORT = 587;
-    private static final String USERNAME = "mhuyy.ho@gmail.com"; // đổi thành Gmail của bạn
-    private static final String PASSWORD = "mmexydfgbzbcnohb";   // password ứng dụng (App Password)
+    private static final String USERNAME = EnvConfig.smtpUsername();
+    private static final String PASSWORD = EnvConfig.smtpPassword();
 
     // ✅ Hàm gửi mail cơ bản
     public static void sendEmail(String to, String subject, String content) {

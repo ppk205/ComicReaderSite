@@ -1,75 +1,100 @@
 package reader.site.Comic.service;
 
-import com.azure.storage.blob.BlobClient;
+import reader.site.Comic.util.EnvConfig;
+
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
-public class AzureBlobUploader {
-
-    private static final String CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=typoo06;AccountKey=cuo0NsaO7kucN8FO2w4u57Fzf1rSgP04A+gSLhSZsslH1uvdaBtXsead6iwGq9w4J5huCFp4qdCu+AStPQjP7A==;EndpointSuffix=core.windows.net";
-    private static final String CONTAINER_NAME = "temp";
+/**
+ * AzureBlobUploader — implements StorageService.
+ * Connection string is loaded from the environment variable AZURE_BLOB_CONNECTION_STRING.
+ * Container name defaults to "temp" but can be overridden via AZURE_BLOB_CONTAINER.
+ */
+public class AzureBlobUploader implements StorageService {
 
     private final BlobContainerClient containerClient;
 
     public AzureBlobUploader() {
+        String connectionString = EnvConfig.azureBlobConnectionString();
+        String containerName    = EnvConfig.azureBlobContainer();
+
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
-                .connectionString(CONNECTION_STRING)
+                .connectionString(connectionString)
                 .buildClient();
 
-        containerClient = blobServiceClient.getBlobContainerClient(CONTAINER_NAME);
-        // Đảm bảo container tồn tại (chỉ cần gọi một lần khi khởi tạo hệ thống)
+        containerClient = blobServiceClient.getBlobContainerClient(containerName);
         if (!containerClient.exists()) {
             containerClient.create();
         }
-        System.out.println("Azure Blob Storage client initialized for container: " + CONTAINER_NAME);
+        System.out.println("[AzureBlobUploader] Initialized for container: " + containerName);
     }
 
-    /**
-     * Upload file lên Azure Blob Storage.
-     * @param inputStream Dữ liệu file đầu vào
-     * @param blobName Tên duy nhất của blob (ví dụ: UUID.epub)
-     * @param fileSize Kích thước file
-     * @return true nếu upload thành công
-     */
-    public boolean uploadFile(InputStream inputStream, String blobName, long fileSize) {
-        BlobClient blobClient = containerClient.getBlobClient(blobName);
+    @Override
+    public boolean uploadFile(InputStream inputStream, String fileName, long fileSize) {
         try {
-            // Upload và ghi đè nếu đã tồn tại
-            blobClient.upload(inputStream, fileSize, true);
+            containerClient.getBlobClient(fileName).upload(inputStream, fileSize, true);
             return true;
         } catch (Exception e) {
-            System.err.println("Error uploading file to Azure: " + e.getMessage());
+            System.err.println("[AzureBlobUploader] Upload error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean exists(String fileName) {
+        try {
+            return containerClient.getBlobClient(fileName).exists();
+        } catch (Exception e) {
+            System.err.println("[AzureBlobUploader] exists() error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public long getFileSize(String fileName) throws IOException {
+        try {
+            return containerClient.getBlobClient(fileName).getProperties().getBlobSize();
+        } catch (Exception e) {
+            throw new IOException("Cannot get file size from Azure: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void streamFile(String fileName, OutputStream out) throws IOException {
+        try {
+            containerClient.getBlobClient(fileName).download(out);
+        } catch (Exception e) {
+            throw new IOException("Cannot stream file from Azure: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean deleteFile(String fileName) {
+        try {
+            var blobClient = containerClient.getBlobClient(fileName);
+            if (blobClient.exists()) blobClient.delete();
+            return true;
+        } catch (Exception e) {
+            System.err.println("[AzureBlobUploader] Delete error: " + e.getMessage());
             return false;
         }
     }
 
     /**
-     * Lấy BlobClient để đọc/stream file từ Azure.
-     * @param blobName Tên blob duy nhất
-     * @return BlobClient
+     * Kiểm tra nhanh xem Azure có đang hoạt động không.
+     * Dùng bởi HybridStorageService trước khi quyết định upload.
      */
-    public BlobClient getBlobClient(String blobName) {
-        return containerClient.getBlobClient(blobName);
-    }
-
-    /**
-     * Xóa file khỏi Azure Blob Storage.
-     * @param blobName Tên blob duy nhất
-     * @return true nếu xóa thành công hoặc file không tồn tại
-     */
-    public boolean deleteFile(String blobName) {
-        BlobClient blobClient = containerClient.getBlobClient(blobName);
+    public boolean isAvailable() {
         try {
-            if (blobClient.exists()) {
-                blobClient.delete();
-                return true;
-            }
-            return false;
+            containerClient.exists();
+            return true;
         } catch (Exception e) {
-            System.err.println("Error deleting file from Azure: " + e.getMessage());
+            System.err.println("[AzureBlobUploader] Not available: " + e.getMessage());
             return false;
         }
     }

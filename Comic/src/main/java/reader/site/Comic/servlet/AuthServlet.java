@@ -69,8 +69,6 @@ public class AuthServlet extends BaseServlet {
         }
 
         String identifier = loginRequest.getEmail();
-        System.out.println("getEmail after update: " + loginRequest.getEmail());
-        System.out.println("getPassword after update: " + loginRequest.getPassword());
         if (identifier == null || identifier.isBlank() ||
                 loginRequest.getPassword() == null || loginRequest.getPassword().isBlank()) {
             writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "email and password are required");

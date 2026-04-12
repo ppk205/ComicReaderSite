@@ -1,13 +1,18 @@
 package reader.site.Comic.servlet;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import reader.site.Comic.dao.CommentDAO;
 import reader.site.Comic.dao.PostDAO;
+import reader.site.Comic.dao.RoleDAO;
+import reader.site.Comic.dao.UserDAO;
 import reader.site.Comic.model.Comment;
 import reader.site.Comic.model.Post;
+import reader.site.Comic.model.User;
+import reader.site.Comic.service.AuthService;
+import reader.site.Comic.service.TokenService;
 import reader.site.Comic.util.JsonUtil;
 
 import java.io.IOException;
@@ -16,10 +21,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @WebServlet(name = "CommentApiServlet", urlPatterns = {"/api/comments"})
-public class CommentApiServlet extends HttpServlet {
+public class CommentApiServlet extends BaseServlet {
 
-    private final CommentDAO commentDAO = new CommentDAO();
-    private final PostDAO postDAO = new PostDAO();
+    private CommentDAO commentDAO;
+    private PostDAO postDAO;
+    private AuthService authService;
+
+    @Override
+    public void init() throws ServletException {
+        commentDAO = new CommentDAO();
+        postDAO = new PostDAO();
+        authService = new AuthService(new UserDAO(), new RoleDAO(), new TokenService());
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -37,9 +50,16 @@ public class CommentApiServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // [SECURITY FIX] Vuln #8 & #9: Require authentication. authorId set from token.
+        User user = getAuthenticatedUser(req);
+        if (user == null) {
+            JsonUtil.writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
+        }
+
         CreateCommentBody body = JsonUtil.readJson(req, CreateCommentBody.class);
-        if (body == null || body.postId == null || isBlank(body.content) || isBlank(body.authorId)) {
-            JsonUtil.writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "postId, content, authorId là bắt buộc");
+        if (body == null || body.postId == null || isBlank(body.content)) {
+            JsonUtil.writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "postId, content là bắt buộc");
             return;
         }
 
@@ -50,9 +70,10 @@ public class CommentApiServlet extends HttpServlet {
         }
 
         Comment c = new Comment();
-        c.setPost(post); // phải set entity
+        c.setPost(post);
         c.setContent(body.content);
-        c.setAuthorId(body.authorId);
+        // [SECURITY FIX] authorId is always taken from the validated token
+        c.setAuthorId(user.getId());
         c.setCreatedAt(Instant.now());
 
         Comment created = commentDAO.create(c);
@@ -60,6 +81,14 @@ public class CommentApiServlet extends HttpServlet {
     }
 
     // ===== Helpers =====
+    private User getAuthenticatedUser(HttpServletRequest req) {
+        String header = req.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            header = header.substring(7);
+        }
+        return authService.resolveToken(header);
+    }
+
     private static boolean isBlank(String s) { return s == null || s.isBlank(); }
     private static Long parseLong(String s) { try { return s==null?null:Long.parseLong(s);} catch(Exception e){return null;} }
     private static Integer parseInt(String s, int def) { try { return s==null?def:Integer.parseInt(s);} catch(Exception e){return def;} }
@@ -68,7 +97,7 @@ public class CommentApiServlet extends HttpServlet {
     public static class CreateCommentBody {
         public Long postId;
         public String content;
-        public String authorId;
+        // authorId removed from body — set server-side from token
     }
 
     public static class CommentDTO {
@@ -76,7 +105,7 @@ public class CommentApiServlet extends HttpServlet {
         public Long postId;
         public String content;
         public String authorId;
-        public String createdAt; // ISO string
+        public String createdAt;
 
         public static CommentDTO from(Comment c) {
             CommentDTO d = new CommentDTO();

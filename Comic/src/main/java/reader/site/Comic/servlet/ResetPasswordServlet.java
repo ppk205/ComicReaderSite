@@ -25,9 +25,6 @@ public class ResetPasswordServlet extends HttpServlet {
         String token = jsonObj.get("token").getAsString();
         String newPassword = jsonObj.get("password").getAsString();
 
-        System.out.println("token after update: " + token);
-        System.out.println("newPassword after update: " + newPassword);
-
         boolean success = UserDAO.resetPassword(token, newPassword);
 
         res.setContentType("application/json");
