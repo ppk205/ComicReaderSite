@@ -13,10 +13,30 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import reader.site.Comic.model.User;
+import reader.site.Comic.service.AuthService;
+import reader.site.Comic.service.TokenService;
+import reader.site.Comic.dao.UserDAO;
+import reader.site.Comic.dao.RoleDAO;
+
 @WebServlet(name = "PostApiServlet", urlPatterns = {"/api/posts/*"})
 public class PostApiServlet extends HttpServlet {
 
     private final PostDAO postDAO = new PostDAO();
+    private AuthService authService;
+
+    @Override
+    public void init() {
+        authService = new AuthService(new UserDAO(), new RoleDAO(), new TokenService());
+    }
+
+    private User getAuthenticatedUser(HttpServletRequest req) {
+        String header = req.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            header = header.substring(7);
+        }
+        return authService.resolveToken(header);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -30,12 +50,17 @@ public class PostApiServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        User user = getAuthenticatedUser(req);
+        if (user == null) {
+            JsonUtil.writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
+        }
+
         CreatePostBody body = JsonUtil.readJson(req, CreatePostBody.class);
         if (body == null ||
                 isBlank(body.title) ||
-                isBlank(body.content) ||
-                isBlank(body.authorId)) {
-            JsonUtil.writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "title, content, authorId là bắt buộc");
+                isBlank(body.content)) {
+            JsonUtil.writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "title, content là bắt buộc");
             return;
         }
 
@@ -43,7 +68,7 @@ public class PostApiServlet extends HttpServlet {
         p.setTitle(body.title);
         p.setContent(body.content);
         p.setCoverImage(body.coverImage);
-        p.setAuthorId(body.authorId);
+        p.setAuthorId(user.getId()); // securely map author identity using token
         p.setMangaId(body.mangaId);
         p.setTagsCsv(body.tagsCsv);
         // có @PrePersist nhưng vẫn set để rõ ràng khi test/mock

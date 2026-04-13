@@ -15,11 +15,31 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import reader.site.Comic.model.User;
+import reader.site.Comic.service.AuthService;
+import reader.site.Comic.service.TokenService;
+import reader.site.Comic.dao.UserDAO;
+import reader.site.Comic.dao.RoleDAO;
+
 @WebServlet(name = "CommentApiServlet", urlPatterns = {"/api/comments"})
 public class CommentApiServlet extends HttpServlet {
 
     private final CommentDAO commentDAO = new CommentDAO();
     private final PostDAO postDAO = new PostDAO();
+    private AuthService authService;
+
+    @Override
+    public void init() {
+        authService = new AuthService(new UserDAO(), new RoleDAO(), new TokenService());
+    }
+
+    private User getAuthenticatedUser(HttpServletRequest req) {
+        String header = req.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            header = header.substring(7);
+        }
+        return authService.resolveToken(header);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -37,9 +57,15 @@ public class CommentApiServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        User user = getAuthenticatedUser(req);
+        if (user == null) {
+            JsonUtil.writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
+        }
+
         CreateCommentBody body = JsonUtil.readJson(req, CreateCommentBody.class);
-        if (body == null || body.postId == null || isBlank(body.content) || isBlank(body.authorId)) {
-            JsonUtil.writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "postId, content, authorId là bắt buộc");
+        if (body == null || body.postId == null || isBlank(body.content)) {
+            JsonUtil.writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "postId và content là bắt buộc");
             return;
         }
 
@@ -50,9 +76,10 @@ public class CommentApiServlet extends HttpServlet {
         }
 
         Comment c = new Comment();
-        c.setPost(post); // phải set entity
+        c.setPost(post);
         c.setContent(body.content);
-        c.setAuthorId(body.authorId);
+        // GET AUTHOR ID FROM THE AUTHENTICATED USER TOKEN
+        c.setAuthorId(user.getId());
         c.setCreatedAt(Instant.now());
 
         Comment created = commentDAO.create(c);

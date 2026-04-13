@@ -46,9 +46,8 @@ export default function PostDetail({ params }: { params: Promise<{ id: string }>
         try {
             const newCmt = await apiService.createComment({
                 postId: Number(id),
-                authorId: 'admin-001',
                 content,
-            });
+            }) as Comment;
             setComments((old) => [...old, newCmt]);
             setContent('');
         } catch (e: any) {

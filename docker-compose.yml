@@ -4,7 +4,12 @@ services:
     build: ./Comic
     ports:
       - "8080:8080"
+    environment:
+      - DB_URL=jdbc:mysql://websql1.mysql.database.azure.com:3306/comicdb?useSSL=true&verifyServerCertificate=false&serverTimezone=UTC
+      - DB_USER=ppk123
+      - DB_PASSWORD=Mysql@1234
+      - ALLOWED_ORIGINS=https://comicreadersite.azurewebsites.net,http://localhost:3000,http://127.0.0.1:3000
   frontend:
     build: ./ComicReaderSite
     ports:
-      - "3000:3000" 
+      - "3000:3000"

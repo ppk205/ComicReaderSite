@@ -51,10 +51,9 @@ export default function CreatePostPage() {
                     .map((s) => s.trim())
                     .filter(Boolean)
                     .join(','),
-                authorId: me.id,
             };
 
-            const result = await apiService.createPost(payload);
+            const result = await apiService.createPost(payload) as { id: number };
             router.push(`/community/posts/${result.id}`);
         } catch (e: any) {
             setErr(e.message);

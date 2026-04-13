@@ -21,9 +21,9 @@ public abstract class BaseServlet extends HttpServlet {
             .create();
 
     protected void setCorsHeaders(HttpServletResponse resp) {
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        // CORS is handled globally by CorsFilter.
+        // This method is intentionally left as a no-op to avoid
+        // overriding the precise origin set by the filter.
     }
 
     @Override

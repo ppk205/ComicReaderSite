@@ -7,7 +7,7 @@
 //       "https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/api";
 
     const DEFAULT_API_BASE_URL =
-      "http://localhost:8080/Comic/api";
+      "http://localhost:8080/api";
     const API_BASE_URL =
         process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, '') || DEFAULT_API_BASE_URL;
 
@@ -351,14 +351,10 @@
         }
 
         async createPost(data: any) {
-            const base = await this.resolveBaseUrl().catch(() => this.base);
-            const r = await fetch(`${base}/posts`, {
+            return this.request('/posts', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
-            if (!r.ok) throw new Error(await r.text());
-            return r.json();
         }
 
         async getComments(postId: number) {
@@ -369,14 +365,10 @@
         }
 
         async createComment(data: any) {
-            const base = await this.resolveBaseUrl().catch(() => this.base);
-            const r = await fetch(`${base}/comments`, {
+            return this.request('/comments', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
-            if (!r.ok) throw new Error(await r.text());
-            return r.json();
         }
             async getBookmarks() {
                     return this.request('/bookmarks');
