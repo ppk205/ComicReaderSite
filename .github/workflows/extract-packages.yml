@@ -1,0 +1,100 @@
+name: Extract Packages (SBOM + CVE scan)
+
+# Extracts the full package manifest of both apps as a Software Bill of Materials
+# (CycloneDX SBOM), produces a dependency listing, and scans for known CVEs.
+# Reports are uploaded as workflow artifacts for review.
+
+on:
+  push:
+    branches: [main, websec, "security/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-packages:
+    name: Backend (Maven) — SBOM + dependency-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Build + generate CycloneDX SBOM
+        working-directory: Comic
+        run: mvn -B clean package -DskipTests
+
+      - name: Extract dependency list
+        working-directory: Comic
+        run: mvn -B dependency:list -DoutputFile=dependency-list.txt -Dsort=true
+
+      - name: OWASP dependency-check (CVE scan)
+        uses: dependency-check/dependency-check-action@v3
+        with:
+          path: Comic
+          format: ALL
+          out: dependency-check-report
+          args: >
+            --failOnCVSS 11
+        continue-on-error: true # report-only for now; tighten once baseline is reviewed
+        env:
+          NVD_API_KEY: "${{ secrets.NVD_API_KEY }}" # optional but recommended (rate limits)
+
+      - name: Upload backend package reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-packages
+          path: |
+            Comic/target/bom.json
+            Comic/target/bom.xml
+            Comic/dependency-list.txt
+            dependency-check-report/
+          if-no-files-found: error
+
+  frontend-packages:
+    name: Frontend (npm) — SBOM + npm audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ComicReaderSite/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ComicReaderSite
+        run: npm ci
+
+      - name: Generate CycloneDX SBOM
+        working-directory: ComicReaderSite
+        run: npx --yes @cyclonedx/cyclonedx-npm --output-file sbom.json
+
+      - name: Extract dependency list
+        working-directory: ComicReaderSite
+        run: npm ls --all --json > dependency-list.json || true
+
+      - name: npm audit (CVE scan)
+        working-directory: ComicReaderSite
+        run: npm audit --json > npm-audit.json || true
+
+      - name: Upload frontend package reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-packages
+          path: |
+            ComicReaderSite/sbom.json
+            ComicReaderSite/dependency-list.json
+            ComicReaderSite/npm-audit.json
+          if-no-files-found: error
