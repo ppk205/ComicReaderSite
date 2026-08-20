@@ -1,0 +1,9 @@
+# Never ship build output, local secrets, or dev artifacts into the image context
+node_modules/
+.next/
+out/
+.env
+.env.*
+!.env.example
+*.log
+coverage/

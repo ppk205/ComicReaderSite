@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Test-only persistence unit. Shadows the main persistence.xml on the test classpath
+    so every DAO/service test runs against an in-memory H2 database (MySQL compatibility
+    mode, since a few columns use MySQL types like LONGTEXT).
+    Same unit name "comicPU" so JPAUtil and EpubBookDAO pick it up unchanged.
+-->
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_1.xsd"
+             version="3.1">
+    <persistence-unit name="comicPU" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>reader.site.Comic.entity.PermissionEntity</class>
+        <class>reader.site.Comic.entity.UserRoleEntity</class>
+        <class>reader.site.Comic.entity.UserEntity</class>
+        <class>reader.site.Comic.entity.MangaEntity</class>
+        <class>reader.site.Comic.entity.MangaChapterEntity</class>
+        <class>reader.site.Comic.entity.ReadingHistoryEntity</class>
+        <class>reader.site.Comic.entity.BookmarkEntity</class>
+        <class>reader.site.Comic.model.EpubBook</class>
+        <class>reader.site.Comic.model.Post</class>
+        <class>reader.site.Comic.model.Comment</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver" value="org.h2.Driver"/>
+            <property name="jakarta.persistence.jdbc.url"
+                      value="jdbc:h2:mem:comicdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1"/>
+            <property name="jakarta.persistence.jdbc.user" value="sa"/>
+            <property name="jakarta.persistence.jdbc.password" value=""/>
+
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="false"/>
+        </properties>
+    </persistence-unit>
+</persistence>

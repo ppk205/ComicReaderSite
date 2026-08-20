@@ -17,9 +17,11 @@ public final class PasswordUtil {
         try {
             if (isBCryptHash(hashed)) {
                 return BCrypt.checkpw(plain, hashed);
-            } else {
-                return hashed.equals(plain);
             }
+            // [SECURITY FIX] Vuln #12: Do NOT fall back to plaintext comparison.
+            // Legacy non-bcrypt hashes can no longer authenticate; affected accounts
+            // must reset their password (which stores a proper bcrypt hash).
+            return false;
         } catch (Exception ex) {
             return false;
         }

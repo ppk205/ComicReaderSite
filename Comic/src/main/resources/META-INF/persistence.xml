@@ -9,13 +9,18 @@
         <class>reader.site.Comic.entity.UserRoleEntity</class>
         <class>reader.site.Comic.entity.UserEntity</class>
         <class>reader.site.Comic.entity.MangaEntity</class>
-    <class>reader.site.Comic.entity.MangaChapterEntity</class>
-        <class>reader.site.Comic.entity.ReadingHistoryEntity</class>
+        <class>reader.site.Comic.entity.MangaChapterEntity</class>
         <class>reader.site.Comic.entity.ReadingHistoryEntity</class>
 	<class>reader.site.Comic.model.EpubBook</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+            <!--
+                [SECURITY] DB credentials are resolved from JVM system properties, which must be
+                set at Tomcat startup from environment variables (e.g. via setenv.sh / setenv.bat):
+                  JAVA_OPTS="-DDB_URL=$DB_URL -DDB_USER=$DB_USER -DDB_PASSWORD=***"
+                Never commit real credentials to this file.
+            -->
             <property name="jakarta.persistence.jdbc.url" value="${DB_URL}"/>
             <property name="jakarta.persistence.jdbc.user" value="${DB_USER}"/>
             <property name="jakarta.persistence.jdbc.password" value="${DB_PASSWORD}"/>

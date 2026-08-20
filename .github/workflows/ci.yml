@@ -1,0 +1,66 @@
+name: CI — Tests
+
+# Runs the full backend (JUnit 5 + H2) and frontend (Vitest) test suites
+# on every push and pull request. Both must pass before merge.
+
+on:
+  push:
+    branches: [main, websec, "security/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-tests:
+    name: Backend — Maven tests (JUnit 5 + H2)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Run backend tests
+        working-directory: Comic
+        run: mvn -B test
+
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: Comic/target/surefire-reports/
+          if-no-files-found: ignore
+
+  frontend-tests:
+    name: Frontend — Vitest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: ComicReaderSite/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ComicReaderSite
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: ComicReaderSite
+        run: npm test
+
+      - name: Verify production build
+        working-directory: ComicReaderSite
+        run: npm run build

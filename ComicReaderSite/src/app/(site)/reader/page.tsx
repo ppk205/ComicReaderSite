@@ -19,16 +19,16 @@ interface SpineItem {
 
 const isCoverItem = (x: SpineItem) => {
   const href = String(x.href || '').toLowerCase();
-const idref = String(x.idref || '').toLowerCase();
+  const idref = String(x.idref || '').toLowerCase();
 
-// ép props thành string để tránh crash
-const propsValue = Array.isArray(x.props)
-  ? x.props.join(' ')
-  : typeof x.props === 'object'
-    ? JSON.stringify(x.props)
-    : String(x.props || '');
+  // ép props thành string để tránh crash
+  const propsValue = Array.isArray(x.props)
+    ? x.props.join(' ')
+    : typeof x.props === 'object'
+      ? JSON.stringify(x.props)
+      : String(x.props || '');
 
-const props = propsValue.toLowerCase();
+  const props = propsValue.toLowerCase();
   return (
     href.includes('cover') ||
     idref.includes('cover') ||
@@ -141,7 +141,7 @@ function ReaderInner() {
           flow: 'paginated',
           spread: 'none',
           manager: 'default',
-          allowScriptedContent: true,
+          allowScriptedContent: false,
           minSpreadWidth: 99999,
         });
         rendition.spread('none');
@@ -220,8 +220,8 @@ function ReaderInner() {
 
     return () => {
       document.removeEventListener('keydown', onKey);
-      try { renditionRef.current?.destroy(); } catch {}
-      try { bookRef.current?.destroy(); } catch {}
+      try { renditionRef.current?.destroy(); } catch { }
+      try { bookRef.current?.destroy(); } catch { }
       if (viewerRef.current) viewerRef.current.innerHTML = '';
     };
   }, [bookId, handleNext, handlePrev]);

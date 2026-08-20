@@ -28,18 +28,21 @@ public class ReadingHistoryServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String userId = req.getParameter("userId");
-        
-        if (userId == null || userId.isEmpty()) {
-            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "userId parameter required");
+        // [SECURITY FIX] Vuln #6: doGet now requires authentication.
+        // userId is extracted from the token, not from query params — prevents IDOR.
+        User user = getAuthenticatedUser(req);
+        if (user == null) {
+            writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
             return;
         }
 
         try {
-            List<ReadingHistory> history = historyDAO.findByUserId(Long.parseLong(userId));
+            // [BUG FIX] user ids are UUID strings — Long.parseLong(user.getId()) threw
+            // NumberFormatException for every authenticated user (500 on all history calls).
+            List<ReadingHistory> history = historyDAO.findByUserId(user.getId());
             writeJson(resp, history);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("[ReadingHistoryServlet] Error fetching history: " + e);
             writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching reading history");
         }
     }
@@ -63,20 +66,19 @@ public class ReadingHistoryServlet extends BaseServlet {
         }
 
         try {
-            Long userId = Long.parseLong(user.getId());
             Long mangaId = Long.parseLong(request.getMangaId());
-            
+
             ReadingHistory saved = historyDAO.save(
-                userId,
+                user.getId(),
                 mangaId,
                 request.getChapterId(),
                 request.getCurrentPage() != null ? request.getCurrentPage() : 0,
                 request.getCompleted() != null ? request.getCompleted() : false
             );
-            
+
             writeJson(resp, saved);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("[ReadingHistoryServlet] Error saving progress: " + e);
             writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error saving reading progress");
         }
     }
@@ -97,16 +99,32 @@ public class ReadingHistoryServlet extends BaseServlet {
 
         try {
             String historyId = pathInfo.substring(1);
-            boolean deleted = historyDAO.delete(Long.parseLong(historyId));
-            
+            Long historyIdLong = Long.parseLong(historyId);
+
+            // [SECURITY FIX] Vuln #19: Verify ownership before deleting.
+            // Check that the history record belongs to the authenticated user.
+            ReadingHistory existing = historyDAO.findById(historyIdLong);
+            if (existing == null) {
+                writeError(resp, HttpServletResponse.SC_NOT_FOUND, "History not found");
+                return;
+            }
+            if (!String.valueOf(existing.getUserId()).equals(user.getId())) {
+                writeError(resp, HttpServletResponse.SC_FORBIDDEN, "Access denied");
+                return;
+            }
+
+            boolean deleted = historyDAO.delete(historyIdLong);
+
             if (deleted) {
                 setCorsHeaders(resp);
                 resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
             } else {
                 writeError(resp, HttpServletResponse.SC_NOT_FOUND, "History not found");
             }
+        } catch (NumberFormatException e) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid history id");
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("[ReadingHistoryServlet] Error deleting history: " + e);
             writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error deleting history");
         }
     }
@@ -127,13 +145,13 @@ public class ReadingHistoryServlet extends BaseServlet {
 
         public String getMangaId() { return mangaId; }
         public void setMangaId(String mangaId) { this.mangaId = mangaId; }
-        
+
         public String getChapterId() { return chapterId; }
         public void setChapterId(String chapterId) { this.chapterId = chapterId; }
-        
+
         public Integer getCurrentPage() { return currentPage; }
         public void setCurrentPage(Integer currentPage) { this.currentPage = currentPage; }
-        
+
         public Boolean getCompleted() { return completed; }
         public void setCompleted(Boolean completed) { this.completed = completed; }
     }

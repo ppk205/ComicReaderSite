@@ -1,3 +1,24 @@
 /ComicReaderSite/MangaReaderProject
-.idea
-/node_modules
+.idea/misc.xml
+node_modules/
+
+# Security: never commit credential files
+*.env
+.env
+.env.local
+.env.production
+Comic/.env
+ComicReaderSite/.env.local
+ComicReaderSite/.env.production
+
+# Keep example templates
+!*.env.example
+!.env.local.example
+
+# Build output — never commit compiled classes / WARs
+Comic/target/
+ComicReaderSite/.next/
+ComicReaderSite/out/
+
+# Agent workspace (helper scripts, local plans) — not project code
+.hermes/
