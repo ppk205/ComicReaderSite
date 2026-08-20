@@ -47,9 +47,8 @@ public class SeriesServlet extends HttpServlet {
 
     // CORS headers helper
     private void setCorsHeaders(HttpServletResponse resp) {
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        // [SECURITY FIX] Vuln #17: CORS is handled by the global CorsFilter (origin
+        // allow-list). The previous wildcard "*" has been removed.
     }
 
     @Override

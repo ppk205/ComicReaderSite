@@ -11,8 +11,12 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Base servlet that centralises JSON serialisation and CORS handling so every
- * dashboard endpoint behaves consistently.
+ * Base servlet that centralises JSON serialisation so every endpoint behaves consistently.
+ *
+ * [SECURITY FIX] Vuln #17: CORS is handled exclusively by {@link reader.site.Comic.filter.CorsFilter}
+ * (origin allow-list from the ALLOWED_ORIGINS env var). Servlets no longer emit
+ * "Access-Control-Allow-Origin: *" — the helper below is intentionally a no-op kept
+ * for call-site compatibility.
  */
 public abstract class BaseServlet extends HttpServlet {
     // [SECURITY FIX] Vuln #18: Removed disableHtmlEscaping() — Gson now escapes
@@ -21,35 +25,35 @@ public abstract class BaseServlet extends HttpServlet {
             .setPrettyPrinting()
             .create();
 
+    /**
+     * Kept for compatibility with existing call sites. CORS headers are set by the
+     * global CorsFilter; emitting them here previously produced a wildcard origin.
+     */
     protected void setCorsHeaders(HttpServletResponse resp) {
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        // Intentionally empty — see class javadoc (CorsFilter owns CORS).
     }
 
     @Override
     protected void doOptions(jakarta.servlet.http.HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        setCorsHeaders(resp);
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
     protected void writeJson(HttpServletResponse resp, Object payload) throws IOException {
         try {
-            setCorsHeaders(resp);
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
             String json = GSON.toJson(payload);
             resp.getWriter().write(json);
             resp.getWriter().flush(); // đảm bảo ghi xong
         } catch (Exception e) {
-            e.printStackTrace(); // in lỗi thật trong Tomcat
+            // [SECURITY FIX] Vuln #16: log details server-side only; return a generic error.
+            System.err.println("[BaseServlet] Failed to write JSON: " + e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write("{\"error\":\"Failed to write JSON: " + e.getClass().getSimpleName() + " - " + e.getMessage() + "\"}");
+            resp.getWriter().write("{\"error\":\"Internal server error\"}");
         }
     }
 
     protected void writeError(HttpServletResponse resp, int status, String message) throws IOException {
-        setCorsHeaders(resp);
         resp.setStatus(status);
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
