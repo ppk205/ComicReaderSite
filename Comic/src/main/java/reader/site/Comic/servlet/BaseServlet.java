@@ -15,9 +15,10 @@ import java.nio.charset.StandardCharsets;
  * dashboard endpoint behaves consistently.
  */
 public abstract class BaseServlet extends HttpServlet {
+    // [SECURITY FIX] Vuln #18: Removed disableHtmlEscaping() — Gson now escapes
+    // HTML special characters (<, >, &, ", ') in JSON output, adding a layer of XSS defense.
     protected static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
-            .disableHtmlEscaping()
             .create();
 
     protected void setCorsHeaders(HttpServletResponse resp) {
