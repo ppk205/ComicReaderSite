@@ -77,6 +77,9 @@ public class DashboardServlet extends BaseServlet {
             token = token.substring(7);
         }
         User user = authService.resolveToken(token);
-        return user != null;
+        // [SECURITY FIX] Vuln #10: Must be logged in AND have the admin role.
+        // RoleDAO seeds role name "admin" (id "role-admin"), so compare on the name.
+        if (user == null) return false;
+        return user.getRole() != null && "admin".equalsIgnoreCase(user.getRole().getName());
     }
 }

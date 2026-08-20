@@ -123,6 +123,16 @@ public class ReadingHistoryDAO {
         }
     }
 
+    public ReadingHistory findById(Long id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            ReadingHistoryEntity entity = em.find(ReadingHistoryEntity.class, id);
+            return entity == null ? null : toModel(entity);
+        } finally {
+            em.close();
+        }
+    }
+
     private ReadingHistory toModel(ReadingHistoryEntity entity) {
         ReadingHistory model = new ReadingHistory();
         model.setId(String.valueOf(entity.getId()));

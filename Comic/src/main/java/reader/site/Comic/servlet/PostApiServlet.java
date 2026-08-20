@@ -1,11 +1,16 @@
 package reader.site.Comic.servlet;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import reader.site.Comic.dao.PostDAO;
+import reader.site.Comic.dao.RoleDAO;
+import reader.site.Comic.dao.UserDAO;
 import reader.site.Comic.model.Post;
+import reader.site.Comic.model.User;
+import reader.site.Comic.service.AuthService;
+import reader.site.Comic.service.TokenService;
 import reader.site.Comic.util.JsonUtil;
 
 import java.io.IOException;
@@ -14,9 +19,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @WebServlet(name = "PostApiServlet", urlPatterns = {"/api/posts/*"})
-public class PostApiServlet extends HttpServlet {
+public class PostApiServlet extends BaseServlet {
 
-    private final PostDAO postDAO = new PostDAO();
+    private PostDAO postDAO;
+    private AuthService authService;
+
+    @Override
+    public void init() throws ServletException {
+        postDAO = new PostDAO();
+        authService = new AuthService(new UserDAO(), new RoleDAO(), new TokenService());
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -30,12 +42,18 @@ public class PostApiServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // [SECURITY FIX] Vuln #7 & #9: Require authentication. authorId is taken from token.
+        User user = getAuthenticatedUser(req);
+        if (user == null) {
+            JsonUtil.writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
+        }
+
         CreatePostBody body = JsonUtil.readJson(req, CreatePostBody.class);
         if (body == null ||
                 isBlank(body.title) ||
-                isBlank(body.content) ||
-                isBlank(body.authorId)) {
-            JsonUtil.writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "title, content, authorId là bắt buộc");
+                isBlank(body.content)) {
+            JsonUtil.writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "title, content là bắt buộc");
             return;
         }
 
@@ -43,10 +61,10 @@ public class PostApiServlet extends HttpServlet {
         p.setTitle(body.title);
         p.setContent(body.content);
         p.setCoverImage(body.coverImage);
-        p.setAuthorId(body.authorId);
+        // [SECURITY FIX] authorId is always taken from the validated token, not from client input
+        p.setAuthorId(user.getId());
         p.setMangaId(body.mangaId);
         p.setTagsCsv(body.tagsCsv);
-        // có @PrePersist nhưng vẫn set để rõ ràng khi test/mock
         p.setCreatedAt(LocalDateTime.now());
         p.setUpdatedAt(LocalDateTime.now());
 
@@ -55,6 +73,14 @@ public class PostApiServlet extends HttpServlet {
     }
 
     // ===== Helpers =====
+    private User getAuthenticatedUser(HttpServletRequest req) {
+        String header = req.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            header = header.substring(7);
+        }
+        return authService.resolveToken(header);
+    }
+
     private static boolean isBlank(String s) { return s == null || s.isBlank(); }
     private static Long parseLong(String s) { try { return s==null?null:Long.parseLong(s);} catch(Exception e){return null;} }
     private static Integer parseInt(String s, int def) { try { return s==null?def:Integer.parseInt(s);} catch(Exception e){return def;} }
@@ -64,7 +90,7 @@ public class PostApiServlet extends HttpServlet {
         public String title;
         public String content;
         public String coverImage;
-        public String authorId;
+        // authorId field removed from request body — set server-side from token
         public Long mangaId;
         public String tagsCsv;
     }
@@ -77,8 +103,8 @@ public class PostApiServlet extends HttpServlet {
         public String authorId;
         public Long mangaId;
         public String tagsCsv;
-        public String createdAt; // ISO string
-        public String updatedAt; // ISO string
+        public String createdAt;
+        public String updatedAt;
 
         public static PostDTO from(Post p) {
             PostDTO d = new PostDTO();

@@ -28,24 +28,8 @@ public class BookmarkServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        // Development helper: if caller provides ?devUser=<userId>, return that user's bookmarks
-        String devUser = req.getParameter("devUser");
-        if (devUser != null && !devUser.isBlank()) {
-            try {
-                List<Bookmark> bookmarks = bookmarkDAO.findByUserId(devUser);
-                writeJson(resp, bookmarks);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                String detail = ex.toString();
-                StackTraceElement[] stack = ex.getStackTrace();
-                if (stack != null && stack.length > 0) {
-                    detail += " at " + stack[0].toString();
-                }
-                writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching bookmarks: " + detail);
-            }
-            return;
-        }
-
+        // [SECURITY FIX] Vuln #5: Removed devUser bypass parameter.
+        // All bookmark access now requires a valid authentication token.
         User user = getAuthenticatedUser(req);
         if (user == null) {
             writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
@@ -56,20 +40,14 @@ public class BookmarkServlet extends BaseServlet {
             List<Bookmark> bookmarks = bookmarkDAO.findByUserId(user.getId());
             writeJson(resp, bookmarks);
         } catch (Exception ex) {
-            ex.printStackTrace();
-            // Development-time: include exception detail to help debugging
-            String detail = ex.toString();
-            StackTraceElement[] stack = ex.getStackTrace();
-            if (stack != null && stack.length > 0) {
-                detail += " at " + stack[0].toString();
-            }
-            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching bookmarks: " + detail);
+            // [SECURITY FIX] Vuln #16: Return generic error, no stack trace exposed to client.
+            System.err.println("[BookmarkServlet] Error fetching bookmarks: " + ex);
+            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error fetching bookmarks");
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        // Accept Bookmarks payload and persist for authenticated user
         User user = getAuthenticatedUser(req);
         if (user == null) {
             writeError(resp, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
@@ -94,13 +72,8 @@ public class BookmarkServlet extends BaseServlet {
 
             writeJson(resp, saved);
         } catch (Exception ex) {
-            ex.printStackTrace();
-            String detail = ex.toString();
-            StackTraceElement[] stack = ex.getStackTrace();
-            if (stack != null && stack.length > 0) {
-                detail += " at " + stack[0].toString();
-            }
-            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error saving bookmark: " + detail);
+            System.err.println("[BookmarkServlet] Error saving bookmark: " + ex);
+            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error saving bookmark");
         }
     }
 
@@ -120,15 +93,18 @@ public class BookmarkServlet extends BaseServlet {
 
         try {
             String idStr = pathInfo.substring(1);
-            boolean deleted = bookmarkDAO.delete(Long.parseLong(idStr));
+            // [SECURITY FIX] IDOR: only delete bookmarks owned by the authenticated user.
+            boolean deleted = bookmarkDAO.deleteOwned(Long.parseLong(idStr), user.getId());
             if (deleted) {
                 setCorsHeaders(resp);
                 resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
             } else {
                 writeError(resp, HttpServletResponse.SC_NOT_FOUND, "Bookmark not found");
             }
+        } catch (NumberFormatException ex) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid bookmark id");
         } catch (Exception ex) {
-            ex.printStackTrace();
+            System.err.println("[BookmarkServlet] Error deleting bookmark: " + ex);
             writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error deleting bookmark");
         }
     }

@@ -228,4 +228,32 @@ public class BookmarkDAO {
             em.close();
         }
     }
+
+    /**
+     * [SECURITY] Ownership-checked delete: removes the bookmark only if it belongs
+     * to the given user. Returns false when the bookmark does not exist or is owned
+     * by someone else (callers should treat both as "not found" to avoid leaking ids).
+     */
+    public boolean deleteOwned(Long id, String userId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            BookmarkEntity entity = em.find(BookmarkEntity.class, id);
+            if (entity == null || entity.getUser() == null
+                    || !userId.equals(entity.getUser().getId())) {
+                em.getTransaction().rollback();
+                return false;
+            }
+            em.remove(entity);
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception ex) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw ex;
+        } finally {
+            em.close();
+        }
+    }
 }
