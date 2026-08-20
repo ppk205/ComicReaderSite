@@ -26,6 +26,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Produce a self-contained server build for the Docker/GHCR image
+  output: "standalone",
   async headers() {
     return [
       {

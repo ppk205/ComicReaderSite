@@ -1,0 +1,8 @@
+# Never ship build output or local secrets into the image context
+target/
+.env
+.env.*
+!.env.example
+*.log
+.idea/
+*.iml

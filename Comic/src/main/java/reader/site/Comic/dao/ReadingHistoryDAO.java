@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class ReadingHistoryDAO {
 
-    public ReadingHistory save(Long userId, Long mangaId, String chapterId, Integer currentPage, Boolean completed) {
+    public ReadingHistory save(String userId, Long mangaId, String chapterId, Integer currentPage, Boolean completed) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
@@ -71,7 +71,7 @@ public class ReadingHistoryDAO {
         }
     }
 
-    public List<ReadingHistory> findByUserId(Long userId) {
+    public List<ReadingHistory> findByUserId(String userId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             TypedQuery<ReadingHistoryEntity> query = em.createQuery(
@@ -85,7 +85,7 @@ public class ReadingHistoryDAO {
         }
     }
 
-    public Optional<ReadingHistory> findByUserAndManga(Long userId, Long mangaId) {
+    public Optional<ReadingHistory> findByUserAndManga(String userId, Long mangaId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             TypedQuery<ReadingHistoryEntity> query = em.createQuery(

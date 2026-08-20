@@ -19,3 +19,6 @@ ComicReaderSite/.env.production
 Comic/target/
 ComicReaderSite/.next/
 ComicReaderSite/out/
+
+# Agent workspace (helper scripts, local plans) — not project code
+.hermes/

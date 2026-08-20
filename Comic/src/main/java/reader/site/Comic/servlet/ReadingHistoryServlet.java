@@ -37,8 +37,9 @@ public class ReadingHistoryServlet extends BaseServlet {
         }
 
         try {
-            Long userId = Long.parseLong(user.getId());
-            List<ReadingHistory> history = historyDAO.findByUserId(userId);
+            // [BUG FIX] user ids are UUID strings — Long.parseLong(user.getId()) threw
+            // NumberFormatException for every authenticated user (500 on all history calls).
+            List<ReadingHistory> history = historyDAO.findByUserId(user.getId());
             writeJson(resp, history);
         } catch (Exception e) {
             System.err.println("[ReadingHistoryServlet] Error fetching history: " + e);
@@ -65,11 +66,10 @@ public class ReadingHistoryServlet extends BaseServlet {
         }
 
         try {
-            Long userId = Long.parseLong(user.getId());
             Long mangaId = Long.parseLong(request.getMangaId());
 
             ReadingHistory saved = historyDAO.save(
-                userId,
+                user.getId(),
                 mangaId,
                 request.getChapterId(),
                 request.getCurrentPage() != null ? request.getCurrentPage() : 0,
