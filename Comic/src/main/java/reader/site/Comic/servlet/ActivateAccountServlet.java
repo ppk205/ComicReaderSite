@@ -1,15 +1,16 @@
 package reader.site.Comic.servlet;
 
-import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import reader.site.Comic.dao.UserDAO;
+
+import java.io.IOException;
 
 @WebServlet("/api/auth/activate")
 public class ActivateAccountServlet extends HttpServlet {
     private final UserDAO dao = new UserDAO();
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, java.io.IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String token = request.getParameter("token");
         boolean success = UserDAO.activateUser(token);
 
@@ -19,7 +20,5 @@ public class ActivateAccountServlet extends HttpServlet {
         } else {
             response.getWriter().write("{\"error\": \"Token không hợp lệ hoặc đã hết hạn.\"}");
         }
-
-
     }
 }
