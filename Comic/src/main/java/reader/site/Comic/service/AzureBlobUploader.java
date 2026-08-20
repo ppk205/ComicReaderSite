@@ -4,27 +4,33 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import reader.site.Comic.util.EnvConfig;
 
 import java.io.InputStream;
 
+/**
+ * Azure Blob Storage helper.
+ * The connection string comes from the AZURE_BLOB_CONNECTION_STRING environment
+ * variable — never hardcode storage keys in source code.
+ */
 public class AzureBlobUploader {
-
-    private static final String CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=typoo06;AccountKey=cuo0NsaO7kucN8FO2w4u57Fzf1rSgP04A+gSLhSZsslH1uvdaBtXsead6iwGq9w4J5huCFp4qdCu+AStPQjP7A==;EndpointSuffix=core.windows.net";
-    private static final String CONTAINER_NAME = "temp";
 
     private final BlobContainerClient containerClient;
 
     public AzureBlobUploader() {
+        String connectionString = EnvConfig.azureBlobConnectionString();
+        String containerName = EnvConfig.azureBlobContainer();
+
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
-                .connectionString(CONNECTION_STRING)
+                .connectionString(connectionString)
                 .buildClient();
 
-        containerClient = blobServiceClient.getBlobContainerClient(CONTAINER_NAME);
+        containerClient = blobServiceClient.getBlobContainerClient(containerName);
         // Đảm bảo container tồn tại (chỉ cần gọi một lần khi khởi tạo hệ thống)
         if (!containerClient.exists()) {
             containerClient.create();
         }
-        System.out.println("Azure Blob Storage client initialized for container: " + CONTAINER_NAME);
+        System.out.println("Azure Blob Storage client initialized for container: " + containerName);
     }
 
     /**

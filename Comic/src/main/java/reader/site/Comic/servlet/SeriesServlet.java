@@ -7,6 +7,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import reader.site.Comic.util.EnvConfig;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -22,10 +23,10 @@ public class SeriesServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        // NOTE: move these to environment variables or config in production
-        dbUrl = "jdbc:mysql://websql1.mysql.database.azure.com:3306/comic?useSSL=true&allowPublicKeyRetrieval=true";
-        dbUser = "ppk123@websql1"; // Azure MySQL usually requires user@servername
-        dbPass = "Mysql@1234";
+        // [SECURITY] Credentials come from environment variables — see EnvConfig / .env.example
+        dbUrl = EnvConfig.dbUrl();
+        dbUser = EnvConfig.dbUser();
+        dbPass = EnvConfig.dbPassword();
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
