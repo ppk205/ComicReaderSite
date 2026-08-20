@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TokenService {
     private static class TokenMetadata {
         private final User user;
-        private Instant expiresAt;
+        private final Instant expiresAt;
 
         private TokenMetadata(User user, Instant expiresAt) {
             this.user = user;
@@ -21,9 +21,12 @@ public class TokenService {
 
     private static final Map<String, TokenMetadata> TOKENS = new ConcurrentHashMap<>();
 
+    /** Absolute session lifetime. */
+    private static final long TOKEN_LIFETIME_HOURS = 12;
+
     public String issueToken(User user) {
         String token = UUID.randomUUID().toString();
-        Instant expiry = Instant.now().plus(12, ChronoUnit.HOURS);
+        Instant expiry = Instant.now().plus(TOKEN_LIFETIME_HOURS, ChronoUnit.HOURS);
         TOKENS.put(token, new TokenMetadata(user, expiry));
         return token;
     }
@@ -43,8 +46,8 @@ public class TokenService {
             return null;
         }
 
-        // Sliding expiration for convenience during demos
-        metadata.expiresAt = Instant.now().plus(12, ChronoUnit.HOURS);
+        // [SECURITY FIX] Vuln #25: removed sliding expiration. Tokens now have a fixed
+        // absolute lifetime of 12 hours; activity no longer extends the session.
         return metadata.user;
     }
 

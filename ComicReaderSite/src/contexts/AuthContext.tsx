@@ -4,8 +4,9 @@ import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import { AuthState, LoginCredentials, User } from '@/types/auth';
 import { apiService } from '@/services/api';
 
-const DEFAULT_USERNAME = process.env.NEXT_PUBLIC_DEFAULT_USERNAME || 'admin';
-const DEFAULT_PASSWORD = process.env.NEXT_PUBLIC_DEFAULT_PASSWORD || 'admin123';
+// [SECURITY FIX] Vuln #3: Removed DEFAULT_USERNAME / DEFAULT_PASSWORD constants
+// and the automatic login behavior. Hardcoded credentials (even via env vars with
+// the NEXT_PUBLIC_ prefix) end up in the client-side JS bundle and must not exist.
 
 interface AuthContextType {
     state: AuthState;
@@ -137,14 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 return;
             }
 
-            if (DEFAULT_USERNAME && DEFAULT_PASSWORD) {
-                try {
-                    // keep automatic login behavior; login accepts username or email
-                    await login({ username: DEFAULT_USERNAME, password: DEFAULT_PASSWORD });
-                } catch (error) {
-                    console.warn('Automatic login failed. Please sign in manually.', error);
-                }
-            }
+            // [SECURITY FIX] Vuln #3: no automatic login. Users must sign in explicitly.
         };
 
         bootstrap();

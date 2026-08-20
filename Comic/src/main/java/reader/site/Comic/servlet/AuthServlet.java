@@ -14,6 +14,7 @@ import reader.site.Comic.model.UserRole;
 import reader.site.Comic.service.AuthService;
 import reader.site.Comic.service.TokenService;
 import reader.site.Comic.util.EmailUtil;
+import reader.site.Comic.util.RateLimiter;
 
 import java.io.IOException;
 
@@ -23,6 +24,10 @@ public class AuthServlet extends BaseServlet {
     private TokenService tokenService;
     private UserDAO userDAO;
     private RoleDAO roleDAO;
+
+    /** Login brute-force throttle: 10 attempts per 15 minutes per IP. */
+    private static final int LOGIN_MAX_ATTEMPTS = 10;
+    private static final long LOGIN_WINDOW_MILLIS = 15 * 60 * 1000L;
 
     @Override
     public void init() throws ServletException {
@@ -63,14 +68,19 @@ public class AuthServlet extends BaseServlet {
     }
 
     private void handleLogin(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // [SECURITY FIX] Vuln #31: throttle login attempts per client IP.
+        if (!RateLimiter.allow(RateLimiter.clientIp(req), LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW_MILLIS)) {
+            writeError(resp, 429, "Too many login attempts. Try again later.");
+            return;
+        }
+
         LoginRequest loginRequest = readJson(resp, req, LoginRequest.class);
         if (loginRequest == null) {
             return;
         }
 
         String identifier = loginRequest.getEmail();
-        System.out.println("getEmail after update: " + loginRequest.getEmail());
-        System.out.println("getPassword after update: " + loginRequest.getPassword());
+        // [SECURITY FIX] Vuln #14: never log credentials.
         if (identifier == null || identifier.isBlank() ||
                 loginRequest.getPassword() == null || loginRequest.getPassword().isBlank()) {
             writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "email and password are required");
@@ -86,6 +96,7 @@ public class AuthServlet extends BaseServlet {
         String token = authService.issueToken(user);
         writeJson(resp, new AuthResponse(token, user));
     }
+
     private void handleRegister(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         RegisterRequest registerRequest = readJson(resp, req, RegisterRequest.class);
         if (registerRequest == null) {
@@ -116,11 +127,10 @@ public class AuthServlet extends BaseServlet {
             newUser.setRole(defaultRole);
         }
 
-
         User created = userDAO.create(newUser);
         String activationToken = userDAO.generateActivationToken(created.getId());
 
-        System.out.println("activation_token after update: " + activationToken);
+        // [SECURITY FIX] Vuln #15: activation token is not logged.
         EmailUtil.sendActivationEmail(newUser.getEmail(), activationToken);
 
         String token = authService.issueToken(created);
@@ -152,11 +162,13 @@ public class AuthServlet extends BaseServlet {
     }
 
     private String extractToken(HttpServletRequest req) {
+        // [SECURITY FIX] Vuln #24: tokens are only accepted via the Authorization header.
+        // Query-param tokens leak into URLs, server logs, and Referer headers.
         String header = req.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             return header.substring(7);
         }
-        return header != null ? header : req.getParameter("token");
+        return null;
     }
 
     private static class MessageResponse {
