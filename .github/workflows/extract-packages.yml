@@ -37,11 +37,13 @@ jobs:
         run: mvn -B dependency:list -DoutputFile=dependency-list.txt -Dsort=true
 
       - name: OWASP dependency-check (CVE scan)
-        uses: dependency-check/dependency-check-action@v3
+        uses: dependency-check/Dependency-Check_Action@main
+        id: Depcheck
         with:
-          path: Comic
-          format: ALL
-          out: dependency-check-report
+          project: "ComicReaderSite-backend"
+          path: "Comic"
+          format: "ALL"
+          out: "dependency-check-report"
           args: >
             --failOnCVSS 11
         continue-on-error: true # report-only for now; tighten once baseline is reviewed
@@ -66,10 +68,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node 20
+      - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: ComicReaderSite/package-lock.json
 
@@ -79,7 +81,9 @@ jobs:
 
       - name: Generate CycloneDX SBOM
         working-directory: ComicReaderSite
-        run: npx --yes @cyclonedx/cyclonedx-npm --output-file sbom.json
+        # --ignore-npm-errors: npm ls flags platform-specific optional native deps
+        # (lightningcss, @emnapi, ...) as extraneous on Linux; they are harmless.
+        run: npx --yes @cyclonedx/cyclonedx-npm --ignore-npm-errors --output-file sbom.json
 
       - name: Extract dependency list
         working-directory: ComicReaderSite
