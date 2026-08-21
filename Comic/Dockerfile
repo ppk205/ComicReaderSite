@@ -19,6 +19,25 @@ RUN mvn -B clean package -DskipTests
 # Stage 2: run on Tomcat 10.1 (Jakarta EE) with JDK 17
 FROM tomcat:10.1-jdk17-temurin
 WORKDIR /usr/local/tomcat
+
+# Values are supplied by the deployment workflow as Docker build arguments.
+# They become image environment variables so the container can start without
+# a separate runtime secret injection step.
+ARG DB_URL
+ARG DB_USER
+ARG DB_PASSWORD
+ARG SMTP_USERNAME
+ARG SMTP_APP_PASSWORD
+ARG AZURE_BLOB_CONNECTION_STRING
+ARG AZURE_BLOB_CONTAINER=temp
+ENV DB_URL=${DB_URL} \
+    DB_USER=${DB_USER} \
+    DB_PASSWORD=${DB_PASSWORD} \
+    SMTP_USERNAME=${SMTP_USERNAME} \
+    SMTP_APP_PASSWORD=${SMTP_APP_PASSWORD} \
+    AZURE_BLOB_CONNECTION_STRING=${AZURE_BLOB_CONNECTION_STRING} \
+    AZURE_BLOB_CONTAINER=${AZURE_BLOB_CONTAINER}
+
 # Disable the shutdown port (container hardening) and clear default webapps
 RUN sed -i 's/port="8005"/port="-1"/' conf/server.xml
 RUN rm -rf webapps/*

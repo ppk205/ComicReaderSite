@@ -1,5 +1,12 @@
 name: Build and Deploy to Azure
 
+# Builds both images with secrets baked in via --build-arg and pushes them to
+# the PRIVATE ACR (comicreadersite.azurecr.io).
+#
+# NOTE: The public GHCR workflow (ghcr.yml) builds the SAME Dockerfiles but
+# passes NO secret build-args, so the GHCR images stay clean. Secrets only
+# ever land in the private ACR images.
+
 on:
   push:
     branches:
@@ -13,13 +20,11 @@ env:
   ACR_LOGIN_SERVER: comicreadersite.azurecr.io
   IMAGE_BACKEND: backend
   IMAGE_FRONTEND: frontend
-  CONTAINER_APP_NAME: backend-comicreadersite
-  CONTAINER_APP_RG: WebMySQL
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: ACR_NAME
+    environment: ACR_NAME # secrets below come from this GitHub environment
     steps:
       - uses: actions/checkout@v4
 
@@ -30,42 +35,29 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: Build backend image
+      # Comic/Dockerfile declares ARG DB_URL/DB_USER/DB_PASSWORD/SMTP_USERNAME/
+      # SMTP_APP_PASSWORD/AZURE_BLOB_CONNECTION_STRING/AZURE_BLOB_CONTAINER and
+      # promotes them to ENV, so the container boots with all secrets present.
+      - name: Build backend image (secrets via build-args)
         run: |
-          docker build -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_BACKEND }}:latest ./Comic
+          docker build \
+            --build-arg DB_URL="${{ secrets.DB_URL }}" \
+            --build-arg DB_USER="${{ secrets.DB_USER }}" \
+            --build-arg DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            --build-arg SMTP_USERNAME="${{ secrets.MAIL_USER }}" \
+            --build-arg SMTP_APP_PASSWORD="${{ secrets.MAIL_PASSWORD }}" \
+            --build-arg AZURE_BLOB_CONNECTION_STRING="${{ secrets.AZURE_BLOB_CONNECTION_STRING }}" \
+            --build-arg AZURE_BLOB_CONTAINER="${{ secrets.AZURE_BLOB_CONTAINER }}" \
+            -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_BACKEND }}:latest ./Comic
 
+      # Public API base URL baked into the client bundle (not a secret).
       - name: Build frontend image
         run: |
-          docker build -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_FRONTEND }}:latest ./ComicReaderSite
+          docker build \
+            --build-arg NEXT_PUBLIC_API_BASE="${{ vars.NEXT_PUBLIC_API_BASE || 'https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/Comic/api' }}" \
+            -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_FRONTEND }}:latest ./ComicReaderSite
 
       - name: Push images
         run: |
           docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_BACKEND }}:latest
           docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_FRONTEND }}:latest
-
-      # The hardened backend reads its secrets from the container's RUNTIME
-      # environment (Comic/Dockerfile CMD maps $DB_URL/$DB_USER/$DB_PASSWORD into
-      # JAVA_OPTS, and EnvConfig reads SMTP_*/AZURE_BLOB_* via System.getenv).
-      # So instead of baking secrets into image layers, inject them into the
-      # Container App as environment variables. This creates a fresh revision that
-      # pulls the image we just pushed and boots with the secrets present.
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.BACKENDCOMICREADERSITE_AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.BACKENDCOMICREADERSITE_AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.BACKENDCOMICREADERSITE_AZURE_SUBSCRIPTION_ID }}
-
-      - name: Inject runtime secrets into Container App
-        run: |
-          az containerapp update \
-            -n "$CONTAINER_APP_NAME" \
-            -g "$CONTAINER_APP_RG" \
-            --set-env-vars \
-              "DB_URL=${{ secrets.DB_URL }}" \
-              "DB_USER=${{ secrets.DB_USER }}" \
-              "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
-              "SMTP_USERNAME=${{ secrets.MAIL_USER }}" \
-              "SMTP_APP_PASSWORD=${{ secrets.MAIL_PASSWORD }}" \
-              "AZURE_BLOB_CONNECTION_STRING=${{ secrets.AZURE_BLOB_CONNECTION_STRING }}" \
-              "AZURE_BLOB_CONTAINER=${{ secrets.AZURE_BLOB_CONTAINER }}"
