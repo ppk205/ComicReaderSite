@@ -6,6 +6,14 @@
 #   DB_URL, DB_USER, DB_PASSWORD, SMTP_USERNAME, SMTP_APP_PASSWORD,
 #   AZURE_BLOB_CONNECTION_STRING
 # Optional: AZURE_BLOB_CONTAINER, ALLOWED_ORIGINS, APP_BASE_URL, BACKEND_BASE_URL
+#
+# These are supplied AT RUNTIME by the platform, never baked into the image —
+# see Comic/DEPLOYMENT.md. Image layers are readable by anyone with pull access
+# (`docker history`), so build-args are the wrong channel for credentials.
+#
+# NOTE: keep this file LF-only. A CRLF line ending on the CMD line makes the
+# trailing \r part of the instruction, so the JSON exec-form array fails to
+# parse and Docker silently falls back to shell form.
 # ──────────────────────────────────────────────────────────────────────────────
 
 # Stage 1: build the WAR with Maven
@@ -20,31 +28,24 @@ RUN mvn -B clean package -DskipTests
 FROM tomcat:10.1-jdk17-temurin
 WORKDIR /usr/local/tomcat
 
-# Values are supplied by the deployment workflow as Docker build arguments.
-# They become image environment variables so the container can start without
-# a separate runtime secret injection step.
-ARG DB_URL
-ARG DB_USER
-ARG DB_PASSWORD
-ARG SMTP_USERNAME
-ARG SMTP_APP_PASSWORD
-ARG AZURE_BLOB_CONNECTION_STRING
-ARG AZURE_BLOB_CONTAINER=temp
-ENV DB_URL=${DB_URL} \
-    DB_USER=${DB_USER} \
-    DB_PASSWORD=${DB_PASSWORD} \
-    SMTP_USERNAME=${SMTP_USERNAME} \
-    SMTP_APP_PASSWORD=${SMTP_APP_PASSWORD} \
-    AZURE_BLOB_CONNECTION_STRING=${AZURE_BLOB_CONNECTION_STRING} \
-    AZURE_BLOB_CONTAINER=${AZURE_BLOB_CONTAINER}
-
 # Disable the shutdown port (container hardening) and clear default webapps
 RUN sed -i 's/port="8005"/port="-1"/' conf/server.xml
 RUN rm -rf webapps/*
 COPY --from=build /build/target/Comic.war webapps/Comic.war
 
+# persistence.xml resolves ${DB_URL}/${DB_USER}/${DB_PASSWORD} as JVM system
+# properties. catalina.sh sources bin/setenv.sh before launching the JVM, so
+# that is where the container env vars get mapped into JAVA_OPTS. Single quotes
+# keep the expansion at container start, not at image build time.
+RUN printf '%s\n' \
+      '#!/bin/sh' \
+      'JAVA_OPTS="$JAVA_OPTS -DDB_URL=$DB_URL -DDB_USER=$DB_USER -DDB_PASSWORD=$DB_PASSWORD"' \
+      'export JAVA_OPTS' \
+      > "$CATALINA_HOME/bin/setenv.sh" \
+ && chmod +x "$CATALINA_HOME/bin/setenv.sh"
+
 EXPOSE 8080
 
-# persistence.xml reads ${DB_URL}/${DB_USER}/${DB_PASSWORD} as JVM system
-# properties, so map the container env vars into JAVA_OPTS at startup.
-CMD ["sh", "-c", "export JAVA_OPTS=\"$JAVA_OPTS -DDB_URL=$DB_URL -DDB_USER=$DB_USER -DDB_PASSWORD=$DB_PASSWORD\" && catalina.sh run"]
+# Image default: catalina.sh execs the JVM, so java is PID 1 and receives
+# SIGTERM directly for a graceful shutdown.
+CMD ["catalina.sh", "run"]
