@@ -77,25 +77,50 @@ jobs:
             --name "$CONTAINERAPP_NAME" \
             --resource-group "$RESOURCE_GROUP" \
             --image "$ACR_LOGIN_SERVER/$BACKEND_REPO:${{ github.sha }}"
+          REV=$(az containerapp show --name "$CONTAINERAPP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --query "properties.latestRevisionName" -o tsv)
+          echo "Deployed revision: $REV"
+          echo "REVISION=$REV" >> "$GITHUB_ENV"
 
+      # Poll THIS revision by name. Querying "first active revision" is wrong:
+      # the previous, still-healthy revision keeps serving traffic while the new
+      # one boots, so that check passes instantly no matter how badly the new
+      # revision is broken.
       - name: Verify the new revision came up healthy
         run: |
           for i in $(seq 1 30); do
-            state=$(az containerapp revision list \
+            state=$(az containerapp revision show \
               --name "$CONTAINERAPP_NAME" --resource-group "$RESOURCE_GROUP" \
-              --query "[?properties.active].properties.runningState | [0]" -o tsv)
-            echo "attempt $i: runningState=$state"
+              --revision "$REVISION" \
+              --query "properties.runningState" -o tsv 2>/dev/null || echo Unknown)
+            echo "attempt $i: $REVISION runningState=$state"
             case "$state" in
-              Running|RunningAtMaxScale) echo "Revision healthy."; exit 0 ;;
+              Running|RunningAtMaxScale)
+                echo "Revision $REVISION is healthy."; exit 0 ;;
+              ScaledToZero)
+                echo "Revision $REVISION provisioned and scaled to zero (minReplicas=0)."; exit 0 ;;
               Failed|ActivationFailed|Degraded)
-                echo "::error::Revision entered $state. Recent logs:"
+                echo "::error::Revision $REVISION entered $state. Recent logs:"
                 az containerapp logs show --name "$CONTAINERAPP_NAME" \
-                  --resource-group "$RESOURCE_GROUP" --tail 100 || true
+                  --resource-group "$RESOURCE_GROUP" --revision "$REVISION" --tail 100 || true
                 exit 1 ;;
             esac
             sleep 10
           done
-          echo "::error::Revision did not reach a healthy state within 5 minutes."
+          echo "::error::Revision $REVISION did not reach a healthy state within 5 minutes."
           az containerapp logs show --name "$CONTAINERAPP_NAME" \
-            --resource-group "$RESOURCE_GROUP" --tail 100 || true
+            --resource-group "$RESOURCE_GROUP" --revision "$REVISION" --tail 100 || true
           exit 1
+
+      # In Single revision mode traffic follows the latest healthy revision, so a
+      # stale revision still holding 100% means the rollout did not actually land.
+      - name: Confirm traffic moved to the new revision
+        run: |
+          serving=$(az containerapp show --name "$CONTAINERAPP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --query "properties.configuration.ingress.traffic[?weight==\`100\`].revisionName | [0]" -o tsv)
+          echo "Serving revision: $serving (deployed: $REVISION)"
+          if [ "$serving" != "$REVISION" ]; then
+            echo "::warning::Traffic is still on $serving, not $REVISION."
+          fi

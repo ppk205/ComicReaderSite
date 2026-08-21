@@ -35,14 +35,27 @@ COPY --from=build /build/target/Comic.war webapps/Comic.war
 
 # persistence.xml resolves ${DB_URL}/${DB_USER}/${DB_PASSWORD} as JVM system
 # properties. catalina.sh sources bin/setenv.sh before launching the JVM, so
-# that is where the container env vars get mapped into JAVA_OPTS. Single quotes
-# keep the expansion at container start, not at image build time.
+# that is where the container env vars get mapped into JAVA_OPTS.
+#
+# The values MUST be single-quoted. catalina.sh launches the JVM with
+# `eval exec ... $JAVA_OPTS ...`, and eval re-parses the expanded string as
+# shell source. An unquoted JDBC URL like
+#   jdbc:mysql://host:3306/db?useSSL=true&requireSSL=true
+# has its `&` treated as a background operator, which splits the command and
+# makes Tomcat die with "-DDB_USER=...: command not found". Quoting also makes
+# spaces and `;` safe. A literal single quote in a value would still break it.
+#
+# The outer '\'' dance is how a single quote is embedded inside the
+# single-quoted printf arguments below; the file itself ends up containing
+#   JAVA_OPTS="$JAVA_OPTS -DDB_URL='$DB_URL' ..."
+# so expansion still happens at container start, not at image build time.
 RUN printf '%s\n' \
       '#!/bin/sh' \
-      'JAVA_OPTS="$JAVA_OPTS -DDB_URL=$DB_URL -DDB_USER=$DB_USER -DDB_PASSWORD=$DB_PASSWORD"' \
+      'JAVA_OPTS="$JAVA_OPTS -DDB_URL='\''$DB_URL'\'' -DDB_USER='\''$DB_USER'\'' -DDB_PASSWORD='\''$DB_PASSWORD'\''"' \
       'export JAVA_OPTS' \
       > "$CATALINA_HOME/bin/setenv.sh" \
- && chmod +x "$CATALINA_HOME/bin/setenv.sh"
+ && chmod +x "$CATALINA_HOME/bin/setenv.sh" \
+ && grep -q -- "-DDB_URL='\$DB_URL'" "$CATALINA_HOME/bin/setenv.sh"
 
 EXPOSE 8080
 

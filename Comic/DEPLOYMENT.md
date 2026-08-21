@@ -121,15 +121,32 @@ az containerapp logs show -n backend-comicreadersite -g WebMySQL --type system -
 |---|---|
 | `terminated with exit code '127'` | Command not found — the image's `CMD` is broken before any Java runs. Usually a CRLF line ending in the Dockerfile making the JSON exec-form array unparseable. Env vars are irrelevant here; rebuild the image. |
 | `ActivationFailed`, no `PulledImage` event | The image tag does not exist in ACR. Check `az acr repository show-tags -n comicreadersite --repository backend`. |
+| `catalina.sh: line N: -DDB_USER=…: command not found` | A DB value reached `eval` unquoted and a metacharacter (usually the `&` in the JDBC URL) split the command. See "Shell metacharacters" below. |
 | `IllegalStateException: Required environment variable 'X' is not set` | The app started but `X` is missing or blank. Check the `secretRef` wiring. |
+| `NoClassDefFoundError: Could not initialize class …JPAUtil` | `JPAUtil`'s static initializer already failed once (usually no JDBC URL). Look *earlier* in the log for the original `UnsupportedOperationException: The application must supply JDBC connections`. |
 | Tomcat starts, then `Communications link failure` | Env vars resolved fine; the DB is unreachable. Check the MySQL firewall allows the Container App outbound IPs. |
 | CORS errors in the browser despite `ALLOWED_ORIGINS` being set | `CorsFilter.ALLOWED_ORIGINS` is a `static final` read once at class load, and the value must match the `Origin` header byte for byte — check for a trailing slash. |
 
-Do not put a **space** in `DB_URL`, `DB_USER`, or `DB_PASSWORD`. They are passed via
-`JAVA_OPTS`, which `catalina.sh` word-splits, so a space prevents Tomcat from
-starting at all. Other punctuation (`@ ; = ! $ " \ &`) is fine, and
-`SMTP_APP_PASSWORD` may contain spaces — it is read only via `System.getenv`, so a
-Gmail app password can be pasted exactly as shown.
+### Shell metacharacters in DB credentials
+
+`catalina.sh` launches the JVM with `eval exec … $JAVA_OPTS …`, so `eval` re-parses
+whatever `setenv.sh` put in `JAVA_OPTS`. `setenv.sh` therefore single-quotes each
+value:
+
+```sh
+JAVA_OPTS="$JAVA_OPTS -DDB_URL='$DB_URL' -DDB_USER='$DB_USER' -DDB_PASSWORD='$DB_PASSWORD'"
+```
+
+With the quotes, `&`, `;`, spaces, `$`, and `"` are all safe — which matters because
+a normal Azure MySQL URL contains `?useSSL=true&requireSSL=true`. Without them the
+`&` is read as a background operator and Tomcat dies with
+`-DDB_USER=…: command not found`.
+
+The one remaining unsafe character is a literal **single quote** in `DB_URL`,
+`DB_USER`, or `DB_PASSWORD`. Avoid it. `SMTP_APP_PASSWORD` and
+`AZURE_BLOB_CONNECTION_STRING` have no restriction at all — they never touch the
+shell, so a Gmail app password can be pasted exactly as Google shows it, spaces
+included.
 
 ## Local runs
 
