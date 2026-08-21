@@ -6,12 +6,11 @@ on:
       - main
 
 env:
-  AZURE_WEBAPP_NAME: comicreadersite
-  AZURE_RESOURCE_GROUP: WebMySQL1
-  ACR_NAME: comicreadersite
   ACR_LOGIN_SERVER: comicreadersite.azurecr.io
   IMAGE_BACKEND: backend
   IMAGE_FRONTEND: frontend
+  CONTAINER_APP_NAME: backend-comicreadersite
+  CONTAINER_APP_RG: WebMySQL
 
 jobs:
   build-and-deploy:
@@ -39,3 +38,30 @@ jobs:
         run: |
           docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_BACKEND }}:latest
           docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_FRONTEND }}:latest
+
+      # The hardened backend reads its secrets from the container's RUNTIME
+      # environment (Comic/Dockerfile CMD maps $DB_URL/$DB_USER/$DB_PASSWORD into
+      # JAVA_OPTS, and EnvConfig reads SMTP_*/AZURE_BLOB_* via System.getenv).
+      # So instead of baking secrets into image layers, inject them into the
+      # Container App as environment variables. This creates a fresh revision that
+      # pulls the image we just pushed and boots with the secrets present.
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.BACKENDCOMICREADERSITE_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.BACKENDCOMICREADERSITE_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.BACKENDCOMICREADERSITE_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Inject runtime secrets into Container App
+        run: |
+          az containerapp update \
+            -n "$CONTAINER_APP_NAME" \
+            -g "$CONTAINER_APP_RG" \
+            --set-env-vars \
+              "DB_URL=${{ secrets.DB_URL }}" \
+              "DB_USER=${{ secrets.DB_USER }}" \
+              "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+              "SMTP_USERNAME=${{ secrets.MAIL_USER }}" \
+              "SMTP_APP_PASSWORD=${{ secrets.MAIL_PASSWORD }}" \
+              "AZURE_BLOB_CONNECTION_STRING=${{ secrets.AZURE_BLOB_CONNECTION_STRING }}" \
+              "AZURE_BLOB_CONTAINER=${{ secrets.AZURE_BLOB_CONTAINER }}"
