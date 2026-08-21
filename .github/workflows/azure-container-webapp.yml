@@ -1,63 +1,101 @@
 name: Build and Deploy to Azure
 
-# Builds both images with secrets baked in via --build-arg and pushes them to
-# the PRIVATE ACR (comicreadersite.azurecr.io).
+# Single deploy path for the Azure infrastructure.
 #
-# NOTE: The public GHCR workflow (ghcr.yml) builds the SAME Dockerfiles but
-# passes NO secret build-args, so the GHCR images stay clean. Secrets only
-# ever land in the private ACR images.
+# Builds both images, pushes them to the private ACR (comicreadersite.azurecr.io),
+# then rolls the backend Container App onto the new immutable sha tag.
+#
+# NO secrets are passed as build-args. DB/SMTP/Blob credentials are Container App
+# secrets injected as env vars at runtime — see Comic/DEPLOYMENT.md. That keeps
+# them out of image layers, so the ACR and GHCR images are equally safe.
+#
+# The frontend image is built and pushed but NOT deployed here: the frontend runs
+# on the App Service `comicreadersite`, which is wired up separately.
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
-  id-token: write
+  id-token: write # required for the OIDC token used by azure/login
   contents: read
 
 env:
   ACR_LOGIN_SERVER: comicreadersite.azurecr.io
-  IMAGE_BACKEND: backend
-  IMAGE_FRONTEND: frontend
+  BACKEND_REPO: backend
+  FRONTEND_REPO: frontend
+  CONTAINERAPP_NAME: backend-comicreadersite
+  RESOURCE_GROUP: WebMySQL
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: ACR_NAME # secrets below come from this GitHub environment
     steps:
       - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.BACKENDCOMICREADERSITE_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.BACKENDCOMICREADERSITE_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.BACKENDCOMICREADERSITE_AZURE_SUBSCRIPTION_ID }}
 
       - name: Log in to Azure Container Registry
         uses: azure/docker-login@v1
         with:
           login-server: ${{ env.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
+          username: ${{ secrets.BACKENDCOMICREADERSITE_REGISTRY_USERNAME }}
+          password: ${{ secrets.BACKENDCOMICREADERSITE_REGISTRY_PASSWORD }}
 
-      # Comic/Dockerfile declares ARG DB_URL/DB_USER/DB_PASSWORD/SMTP_USERNAME/
-      # SMTP_APP_PASSWORD/AZURE_BLOB_CONNECTION_STRING/AZURE_BLOB_CONTAINER and
-      # promotes them to ENV, so the container boots with all secrets present.
-      - name: Build backend image (secrets via build-args)
+      - name: Build and push backend image
         run: |
           docker build \
-            --build-arg DB_URL="${{ secrets.DB_URL }}" \
-            --build-arg DB_USER="${{ secrets.DB_USER }}" \
-            --build-arg DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-            --build-arg SMTP_USERNAME="${{ secrets.MAIL_USER }}" \
-            --build-arg SMTP_APP_PASSWORD="${{ secrets.MAIL_PASSWORD }}" \
-            --build-arg AZURE_BLOB_CONNECTION_STRING="${{ secrets.AZURE_BLOB_CONNECTION_STRING }}" \
-            --build-arg AZURE_BLOB_CONTAINER="${{ secrets.AZURE_BLOB_CONTAINER }}" \
-            -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_BACKEND }}:latest ./Comic
+            -t "$ACR_LOGIN_SERVER/$BACKEND_REPO:${{ github.sha }}" \
+            -t "$ACR_LOGIN_SERVER/$BACKEND_REPO:latest" \
+            ./Comic
+          docker push "$ACR_LOGIN_SERVER/$BACKEND_REPO:${{ github.sha }}"
+          docker push "$ACR_LOGIN_SERVER/$BACKEND_REPO:latest"
 
       # Public API base URL baked into the client bundle (not a secret).
-      - name: Build frontend image
+      - name: Build and push frontend image
         run: |
           docker build \
             --build-arg NEXT_PUBLIC_API_BASE="${{ vars.NEXT_PUBLIC_API_BASE || 'https://backend-comicreadersite.wonderfulbay-fb92c756.eastasia.azurecontainerapps.io/Comic/api' }}" \
-            -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_FRONTEND }}:latest ./ComicReaderSite
+            -t "$ACR_LOGIN_SERVER/$FRONTEND_REPO:${{ github.sha }}" \
+            -t "$ACR_LOGIN_SERVER/$FRONTEND_REPO:latest" \
+            ./ComicReaderSite
+          docker push "$ACR_LOGIN_SERVER/$FRONTEND_REPO:${{ github.sha }}"
+          docker push "$ACR_LOGIN_SERVER/$FRONTEND_REPO:latest"
 
-      - name: Push images
+      # Deploy by immutable sha tag, never :latest — Container Apps only creates a
+      # new revision when the image reference actually changes.
+      - name: Deploy backend to Container App
         run: |
-          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_BACKEND }}:latest
-          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_FRONTEND }}:latest
+          az containerapp update \
+            --name "$CONTAINERAPP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$ACR_LOGIN_SERVER/$BACKEND_REPO:${{ github.sha }}"
+
+      - name: Verify the new revision came up healthy
+        run: |
+          for i in $(seq 1 30); do
+            state=$(az containerapp revision list \
+              --name "$CONTAINERAPP_NAME" --resource-group "$RESOURCE_GROUP" \
+              --query "[?properties.active].properties.runningState | [0]" -o tsv)
+            echo "attempt $i: runningState=$state"
+            case "$state" in
+              Running|RunningAtMaxScale) echo "Revision healthy."; exit 0 ;;
+              Failed|ActivationFailed|Degraded)
+                echo "::error::Revision entered $state. Recent logs:"
+                az containerapp logs show --name "$CONTAINERAPP_NAME" \
+                  --resource-group "$RESOURCE_GROUP" --tail 100 || true
+                exit 1 ;;
+            esac
+            sleep 10
+          done
+          echo "::error::Revision did not reach a healthy state within 5 minutes."
+          az containerapp logs show --name "$CONTAINERAPP_NAME" \
+            --resource-group "$RESOURCE_GROUP" --tail 100 || true
+          exit 1

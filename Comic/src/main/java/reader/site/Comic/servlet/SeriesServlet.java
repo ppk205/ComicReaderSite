@@ -14,7 +14,7 @@ import java.lang.reflect.Type;
 import java.sql.*;
 import java.util.*;
 
-@WebServlet("/Comic/api/series")
+@WebServlet("/api/series")
 public class SeriesServlet extends HttpServlet {
     private final Gson gson = new Gson();
     private String dbUrl;

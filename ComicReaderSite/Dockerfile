@@ -20,6 +20,17 @@ ARG NEXT_PUBLIC_API_BASE=http://localhost:8080/Comic/api
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 RUN npm run build
 
+# Next nests the standalone output (.next/standalone/<subdir>/server.js) when it
+# infers a monorepo tracing root from a lockfile above the app — which is what a
+# local build in this repo does, because of the root package-lock.json. Inside the
+# image the context is ./ComicReaderSite alone, so the output is flat. Assert it,
+# otherwise a nested layout would only surface as a crash-looping container.
+RUN test -f .next/standalone/server.js || { \
+      echo "ERROR: .next/standalone/server.js missing - nested standalone output?"; \
+      ls -R .next/standalone | head -40; \
+      exit 1; \
+    }
+
 # Stage 2: minimal runtime with the standalone server
 FROM node:20-alpine AS runtime
 WORKDIR /app

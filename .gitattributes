@@ -1,0 +1,8 @@
+# Files consumed by Linux tooling must stay LF, even when edited on Windows.
+# A stray CR breaks Dockerfile JSON exec-form parsing and shell script shebangs.
+Dockerfile   text eol=lf
+*.Dockerfile text eol=lf
+.dockerignore text eol=lf
+*.sh         text eol=lf
+*.yml        text eol=lf
+*.yaml       text eol=lf
