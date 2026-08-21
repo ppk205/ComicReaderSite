@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   ACR_LOGIN_SERVER: comicreadersite.azurecr.io
   IMAGE_BACKEND: backend
