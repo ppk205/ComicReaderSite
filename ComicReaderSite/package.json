@@ -11,7 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "epubjs": "^0.3.93",
+    "epubjs": "^0.4.2",
     "mangadex-full-api": "^6.0.0",
     "mongodb": "^6.19.0",
     "next": "^15.5.5",
